@@ -1,0 +1,47 @@
+{
+    "signing": {
+        "default": {
+            "expiry": "262800h"
+        },
+        "profiles": {
+            "ca": {
+                "expiry": "262800h",
+                "ca_constraint": {
+                    "is_ca": true
+                },
+                "usages": [
+                    "digital signature",
+                    "cert sign",
+                    "crl sign",
+                    "signing"
+                ],
+                "CSRWhitelist": {
+                    "PublicKeyAlgorithm": true,
+                    "PublicKey": true,
+                    "SignatureAlgorithm": true,
+                    "Subject": true
+                }
+            },
+            "server": {
+                "expiry": "262800h",
+                "backdate": "24h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "server auth"
+                ],
+                "UseSerialSeq": true
+            },
+            "client": {
+                "expiry": "262800h",
+                "backdate": "24h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "client auth"
+                ],
+                "UseSerialSeq": true
+            }
+        }
+    }
+}
