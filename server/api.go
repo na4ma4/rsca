@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -20,15 +21,21 @@ import (
 
 // Server is a api.RSCAServer for co-ordinating streams from clients.
 type Server struct {
-	logger  *zap.Logger
-	streams map[string]*serverStream
-	lock    sync.Mutex
-	metric  *metric
+	logger   *zap.Logger
+	hostname string
+	streams  map[string]*serverStream
+	lock     sync.Mutex
+	metric   *metric
 }
 
 type metric struct {
 	ActiveConnections   prometheus.Gauge
 	LifetimeConnections prometheus.Counter
+	Received            *prometheus.CounterVec
+	PingTick            prometheus.Counter
+	PingMessages        prometheus.Counter
+	PingMessageErrors   prometheus.Counter
+	EventStatus         *prometheus.CounterVec
 }
 
 type serverStream struct {
@@ -37,7 +44,7 @@ type serverStream struct {
 }
 
 // NewServer returns a prepared server object.
-func NewServer(logger *zap.Logger) api.RSCAServer {
+func NewServer(logger *zap.Logger, hostName string) api.RSCAServer {
 	return &Server{
 		logger:  logger,
 		streams: map[string]*serverStream{},
@@ -54,8 +61,56 @@ func NewServer(logger *zap.Logger) api.RSCAServer {
 				Subsystem: "server",
 				Help:      "Number of connections (lifetime)",
 			}),
+			// Received: map[string]*prometheus.CounterVec{},
+			Received: promauto.NewCounterVec(prometheus.CounterOpts{
+				Name:      "events_received",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "received packets, grouped by event",
+			}, []string{"source", "event"}),
+			EventStatus: promauto.NewCounterVec(prometheus.CounterOpts{
+				Name:      "check_results",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "received check results",
+			}, []string{"source", "check", "result"}),
+			PingTick: promauto.NewCounter(prometheus.CounterOpts{
+				Name:      "ping_tick",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "number of server ticks received",
+			}),
+			PingMessages: promauto.NewCounter(prometheus.CounterOpts{
+				Name:      "ping_messages",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "number of tick messages sent",
+			}),
+			PingMessageErrors: promauto.NewCounter(prometheus.CounterOpts{
+				Name:      "ping_message_errors",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "number of tick messages that failed to send",
+			}),
 		},
 	}
+}
+
+func newReceivedCounter(name string) *prometheus.CounterVec {
+	// lcName := strings.ToLower(name)
+	return promauto.NewCounterVec(prometheus.CounterOpts{
+		Name:      "received",
+		Namespace: "rsca",
+		Subsystem: "server",
+		Help:      fmt.Sprintf("received %s packets", name),
+	}, []string{name})
+
+	// return promauto.NewCounter(prometheus.CounterOpts{
+	// 	Name:      fmt.Sprintf("received_%s", lcName),
+	// 	Namespace: "rsca",
+	// 	Subsystem: "server",
+	// 	Help:      fmt.Sprintf("received %s packets", name),
+	// })
 }
 
 // Pipe handles incoming streams and maintains the stream map.
@@ -98,16 +153,31 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 
 		switch msg := in.Message.(type) {
 		case *api.Message_EventMessage:
+			s.metric.Received.WithLabelValues("_all", "EventMessage").Inc()
+			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "EventMessage").Inc()
+			s.metric.EventStatus.WithLabelValues(
+				in.Envelope.Sender.GetName(),
+				msg.EventMessage.GetCheck(),
+				msg.EventMessage.GetStatus().String(),
+			).Inc()
 			s.processEventMessage(msg)
 		case *api.Message_RegisterMessage:
+			s.metric.Received.WithLabelValues("_all", "RegisterMessage").Inc()
+			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "RegisterMessage").Inc()
 			s.processRegisterMessage(streamID, msg)
 		case *api.Message_PingMessage:
-			if err := common.ProcessPingMessage(s.logger, stream, in, msg); err != nil {
+			s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
+			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PingMessage").Inc()
+			if err := common.ProcessPingMessage(s.logger, stream, s.hostname, in, msg); err != nil {
 				s.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
 			}
 		case *api.Message_PongMessage:
+			s.metric.Received.WithLabelValues("_all", "PongMessage").Inc()
+			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PongMessage").Inc()
 			s.processPongMessage(streamID, msg)
 		default:
+			s.metric.Received.WithLabelValues("_all", "Unknown").Inc()
+			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "Unknown").Inc()
 			s.logger.Info("Received unhandled message", zap.Reflect("message", in))
 		}
 	}
@@ -117,7 +187,6 @@ func (s *Server) processEventMessage(
 	msg *api.Message_EventMessage,
 ) {
 	s.logger.Debug("Received EventMessage")
-
 	s.logger.Info("received check data", zap.String("response.id", msg.EventMessage.GetId()),
 		zap.String("check.name", msg.EventMessage.GetCheck()), zap.String("check.status", msg.EventMessage.Status.String()),
 		zap.String("check.output", msg.EventMessage.GetOutput()))
@@ -227,7 +296,12 @@ func (s *Server) Send(msg *api.Message) error {
 
 	for _, streamID := range streamIDs {
 		if v, ok := s.streams[streamID]; ok {
-			errs = append(errs, v.Stream.Send(msg))
+			s.metric.PingMessages.Inc()
+			err := v.Stream.Send(msg)
+			if err != nil {
+				s.metric.PingMessageErrors.Inc()
+			}
+			errs = append(errs, err)
 		}
 	}
 
@@ -247,6 +321,7 @@ func (s *Server) Run(ctx context.Context, cfg config.Conf) func() error {
 				return nil
 			case t := <-ticker.C:
 				s.logger.Debug("Tick", zap.Time("tick", t))
+				s.metric.PingTick.Inc()
 
 				msg := &api.Message{
 					Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: &api.Members{Tag: []string{"_all"}}},

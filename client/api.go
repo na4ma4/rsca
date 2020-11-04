@@ -15,19 +15,21 @@ import (
 
 // Client is a api.RSCAClient for co-ordinating requests from the server.
 type Client struct {
-	logger *zap.Logger
-	checks checks.Checks
-	inbox  chan *api.Message
-	outbox chan *api.Message
+	logger   *zap.Logger
+	hostname string
+	checks   checks.Checks
+	inbox    chan *api.Message
+	outbox   chan *api.Message
 }
 
 // NewClient returns a setup api.RSCAClient.
-func NewClient(logger *zap.Logger, checkList checks.Checks) *Client {
+func NewClient(logger *zap.Logger, hostName string, checkList checks.Checks) *Client {
 	return &Client{
-		logger: logger,
-		checks: checkList,
-		inbox:  make(chan *api.Message),
-		outbox: make(chan *api.Message),
+		logger:   logger,
+		hostname: hostName,
+		checks:   checkList,
+		inbox:    make(chan *api.Message),
+		outbox:   make(chan *api.Message),
 	}
 }
 
@@ -76,7 +78,7 @@ func (c *Client) Pipe(ctx context.Context, cancel context.CancelFunc, stream api
 			case in := <-c.inbox:
 				switch msg := in.Message.(type) {
 				case *api.Message_PingMessage:
-					if err := common.ProcessPingMessage(c.logger, stream, in, msg); err != nil {
+					if err := common.ProcessPingMessage(c.logger, stream, c.hostname, in, msg); err != nil {
 						c.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
 					}
 				case *api.Message_UpdateAllMessage:

@@ -52,10 +52,10 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	defer cancel()
 
 	eg, ctx := errgroup.WithContext(ctx)
-	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("server.bind")))
+	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("client.bind")))
 
 	logger.Debug("Connecting to API",
-		zap.String("bind", grpcServer(cfg.GetString("server.bind"))),
+		zap.String("bind", grpcServer(cfg.GetString("client.bind"))),
 		zap.String("dns-name", serverHostName),
 	)
 
@@ -64,7 +64,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
 
-	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("server.bind")), cp.DialOption(serverHostName))
+	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.bind")), cp.DialOption(serverHostName))
 	if err != nil {
 		logger.Fatal("failed to connect to server", zap.Error(err))
 	}
@@ -79,7 +79,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 
 	hostName := getHostname(cfg)
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
-	cl := client.NewClient(logger, checkList)
+	cl := client.NewClient(logger, hostName, checkList)
 	regmsg := registerMsg(cfg, hostName, checkList)
 	ms := &api.Member{Name: hostName}
 	streamMsg := &api.Message{
@@ -128,11 +128,11 @@ func registerMsg(cfg config.Conf, hostName string, checkList checks.Checks) *api
 func grpcServer(server string) string {
 	host, port, err := net.SplitHostPort(server)
 	if err != nil {
-		return fmt.Sprintf("%s:6222", server)
+		return fmt.Sprintf("%s:5888", server)
 	}
 
 	if port == "" {
-		port = "6222"
+		port = "5888"
 	}
 
 	return fmt.Sprintf("%s:%s", host, port)

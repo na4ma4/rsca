@@ -26,7 +26,9 @@ func ConfigInit() {
 
 	viper.SetDefault("nagios.command-file", "/tmp/nagios.cmd")
 
-	viper.SetDefault("server.bind", "0.0.0.0:5889")
+	viper.SetDefault("client.bind", "127.0.0.1:5888")
+
+	viper.SetDefault("server.bind", "0.0.0.0:5888")
 	viper.SetDefault("server.tick", "5s")
 
 	viper.SetDefault("watchdog.enabled", false)
