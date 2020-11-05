@@ -66,18 +66,12 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 
 	for {
 		in, err := stream.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
+				logger.Debug("closing stream", zap.Error(err))
 
-		switch {
-		case err == io.EOF:
-			logger.Debug("closing stream")
-
-			return
-		case errors.Is(err, context.Canceled):
-			logger.Debug("closing stream (context cancelled)", zap.Error(err))
-
-			return
-		case err != nil:
-			logger.Debug("closing stream (error)", zap.Error(err))
+				return
+			}
 
 			return
 		}

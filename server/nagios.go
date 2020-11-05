@@ -49,7 +49,7 @@ func writeCommand(logger *zap.Logger, command string) error {
 
 	f, err := os.OpenFile(viper.GetString("nagios.command-file"), os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("open command file for nagios: %w", err)
 	}
 	defer f.Close()
 
@@ -57,5 +57,5 @@ func writeCommand(logger *zap.Logger, command string) error {
 
 	_, err = f.WriteString(commandToWrite)
 
-	return err
+	return fmt.Errorf("write command to nagios: %w", err)
 }

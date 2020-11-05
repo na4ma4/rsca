@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"io"
 	"time"
 
@@ -37,7 +38,7 @@ func (c *Client) streamMessages(cancel context.CancelFunc, stream api.RSCA_PipeC
 	for {
 		in, err := stream.Recv()
 
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			c.logger.Debug("EOF found, closing channel")
 			cancel()
 

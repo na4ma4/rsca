@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -44,26 +45,26 @@ func NewFileCertificateProvider(certDir string, server bool) (c CertificateProvi
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed loading certificates: %w", err)
 	}
 
 	// populate certs.IdentityCert.Leaf. This has already been parsed, but
 	// intentionally discarded by LoadX509KeyPair, for some reason.
 	f.identityCert.Leaf, err = x509.ParseCertificate(f.identityCert.Certificate[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed loading certificates: %w", err)
 	}
 
 	ca, err := ioutil.ReadFile(f.caCertPath())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed loading certificates: %w", err)
 	}
 
 	f.caPool = x509.NewCertPool()
 	if !server {
 		f.caPool, err = x509.SystemCertPool()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed loading certificates: %w", err)
 		}
 	}
 

@@ -3,6 +3,7 @@ package checks
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math/rand"
 	"os/exec"
 	"strings"
@@ -32,7 +33,8 @@ func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int) {
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		// try to get the exit code
-		if exitError, ok := cmdErr.(*exec.ExitError); ok {
+		var exitError *exec.ExitError
+		if errors.As(cmdErr, &exitError) {
 			ws := exitError.Sys().(syscall.WaitStatus)
 			exitCode = ws.ExitStatus()
 		} else {

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -155,13 +156,13 @@ func (s *Server) processPipe(streamID string, stream api.RSCA_PipeServer) error 
 	for {
 		in, err := stream.Recv()
 		if err != nil {
-			if err == io.EOF || errors.Is(err, context.Canceled) {
+			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
 				s.logger.Debug("closing stream", zap.String("stream.id", streamID), zap.Error(err))
 
 				return nil
 			}
 
-			return err
+			return fmt.Errorf("stream closed: %w", err)
 		}
 
 		s.updateLastSeen(streamID, time.Now())
