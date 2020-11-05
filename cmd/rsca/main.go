@@ -65,7 +65,10 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	logger.Debug("Connecting to API", zap.String("bind", grpcServer(cfg.GetString("client.server"))),
 		zap.String("dns-name", serverHostName))
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), cfg.GetBool("client.server-cert-type"))
+	cp, err := certs.NewFileCertificateProvider(
+		cfg.GetString("client.cert-dir"),
+		certs.CertProviderFromString(cfg.GetString("client.cert-type")),
+	)
 	checkErrFatal(err, logger, "failed to get certificates")
 
 	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))

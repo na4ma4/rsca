@@ -46,19 +46,22 @@ func grpcServer(server string) string {
 }
 
 func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.ClientConn {
-	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("client.server")))
+	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("admin.server")))
 
 	logger.Debug("Connecting to API",
-		zap.String("bind", grpcServer(cfg.GetString("client.server"))),
+		zap.String("bind", grpcServer(cfg.GetString("admin.server"))),
 		zap.String("dns-name", serverHostName),
 	)
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), cfg.GetBool("client.server-cert-type"))
+	cp, err := certs.NewFileCertificateProvider(
+		cfg.GetString("admin.cert-dir"),
+		certs.CertProviderFromString(cfg.GetString("admin.cert-type")),
+	)
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
 
-	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
+	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("admin.server")), cp.DialOption(serverHostName))
 	if err != nil {
 		logger.Fatal("failed to connect to server", zap.Error(err))
 	}

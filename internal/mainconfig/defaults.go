@@ -10,6 +10,7 @@ func ConfigInit() {
 	viper.AddConfigPath("./test")
 	viper.AddConfigPath("$HOME/.rsca")
 	viper.AddConfigPath("/etc/rsca")
+	viper.AddConfigPath("/usr/local/etc")
 	viper.AddConfigPath("/usr/local/rsca/etc")
 	viper.AddConfigPath("$HOME/.config")
 	viper.AddConfigPath("/run/secrets")
@@ -28,12 +29,15 @@ func ConfigInit() {
 
 	viper.SetDefault("nagios.command-file", "/tmp/nagios.cmd")
 
+	viper.SetDefault("admin.server", "127.0.0.1:15888")
+	viper.SetDefault("admin.cert-type", "Cert")
+
 	viper.SetDefault("client.server", "127.0.0.1:15888")
-	viper.SetDefault("client.server-cert-type", false)
+	viper.SetDefault("client.cert-type", "Client")
 
 	viper.SetDefault("server.listen", "0.0.0.0:15888")
 	viper.SetDefault("server.tick", "15s")
-	viper.SetDefault("server.server-cert-type", true)
+	viper.SetDefault("server.cert-type", "Server")
 
 	viper.SetDefault("watchdog.enabled", false)
 	viper.SetDefault("watchdog.tick", "30s")

@@ -59,7 +59,10 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("server.cert-dir"), cfg.GetBool("server.server-cert-type"))
+	cp, err := certs.NewFileCertificateProvider(
+		cfg.GetString("server.cert-dir"),
+		certs.CertProviderFromString(cfg.GetString("server.cert-type")),
+	)
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}

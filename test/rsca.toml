@@ -4,6 +4,10 @@ tags=["darwin"]
 [nagios]
 command-file="test/test.cmd"
 
+[admin]
+server="127.0.0.1:15888"
+cert-dir="artifacts/certs"
+
 [client]
 server="127.0.0.1:15888"
 cert-dir="artifacts/certs"
