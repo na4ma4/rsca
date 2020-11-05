@@ -74,7 +74,10 @@ type FileCertificateProvider struct {
 
 // NewFileCertificateProvider returns a new FileCertificateProvider using certs from the specified directory
 // optionally also can be used for gRPC clients by setting server to false.
-func NewFileCertificateProvider(certDir string, providerType CertificateProviderType) (c CertificateProvider, err error) {
+func NewFileCertificateProvider(
+	certDir string,
+	providerType CertificateProviderType,
+) (c CertificateProvider, err error) {
 	f := &FileCertificateProvider{
 		certDir: os.ExpandEnv(certDir),
 	}
@@ -105,7 +108,10 @@ func NewFileCertificateProvider(certDir string, providerType CertificateProvider
 	}
 
 	f.caPool = x509.NewCertPool()
+
 	switch providerType {
+	case ServerProvider:
+		// Do nothing
 	case ClientProvider, CertProvider:
 		f.caPool, err = x509.SystemCertPool()
 		if err != nil {
