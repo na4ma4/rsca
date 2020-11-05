@@ -89,8 +89,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/archives/docker-pull-output-${{ env.RELEASE_VERSION }}-darwin-amd64.zip
-          asset_name: docker-pull-output-${{ env.RELEASE_VERSION }}-darwin-amd64.zip
+          asset_path: artifacts/archives/rsca-${{ env.RELEASE_VERSION }}-darwin-amd64.zip
+          asset_name: rsca-${{ env.RELEASE_VERSION }}-darwin-amd64.zip
           asset_content_type: application/zip
       - name: Upload Release Asset (windows)
         id: upload-release-asset-windows
@@ -99,8 +99,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/archives/docker-pull-output-${{ env.RELEASE_VERSION }}-windows-amd64.zip
-          asset_name: docker-pull-output-${{ env.RELEASE_VERSION }}-windows-amd64.zip
+          asset_path: artifacts/archives/rsca-${{ env.RELEASE_VERSION }}-windows-amd64.zip
+          asset_name: rsca-${{ env.RELEASE_VERSION }}-windows-amd64.zip
           asset_content_type: application/zip
       - name: Upload Release Asset (linux)
         id: upload-release-asset-linux
@@ -109,6 +109,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/archives/docker-pull-output-${{ env.RELEASE_VERSION }}-linux-amd64.zip
-          asset_name: docker-pull-output-${{ env.RELEASE_VERSION }}-linux-amd64.zip
+          asset_path: artifacts/archives/rsca-${{ env.RELEASE_VERSION }}-linux-amd64.zip
+          asset_name: rsca-${{ env.RELEASE_VERSION }}-linux-amd64.zip
           asset_content_type: application/zip
