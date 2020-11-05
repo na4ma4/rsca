@@ -119,7 +119,7 @@ $(GOLINT):
 GOLANGCILINT := artifacts/bin/golangci-lint
 $(GOLANGCILINT):
 	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(MF_PROJECT_ROOT)/$(@D)" v1.30.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(MF_PROJECT_ROOT)/$(@D)" v1.32.2
 
 STATICCHECK := artifacts/bin/staticcheck
 $(STATICCHECK):

@@ -1,0 +1,14 @@
+[Unit]
+Description=RSCA Monitoring Command Client
+BindTo=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/rsca --watchdog
+Type=simple
+User=root
+Group=root
+Restart=on-failure
+WatchdogSec=120

@@ -1,0 +1,14 @@
+[Unit]
+Description=RSCA Monitoring Command Acceptor
+BindTo=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/rscad --watchdog
+Type=simple
+User=nagios
+Group=nagios
+Restart=on-failure
+WatchdogSec=90

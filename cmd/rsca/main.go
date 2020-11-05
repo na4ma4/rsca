@@ -66,22 +66,16 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		zap.String("dns-name", serverHostName))
 
 	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), cfg.GetBool("client.server-cert-type"))
-	if err != nil {
-		logger.Fatal("failed to get certificates", zap.Error(err))
-	}
+	checkErrFatal(err, logger, "failed to get certificates")
 
 	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
-	if err != nil {
-		logger.Fatal("failed to connect to server", zap.Error(err))
-	}
+	checkErrFatal(err, logger, "failed to connect to server")
 
 	rc := api.NewRSCAClient(gc)
 	respChan := make(chan *api.EventMessage)
 
 	stream, err := rc.Pipe(ctx)
-	if err != nil {
-		logger.Fatal("unable to create stream", zap.Error(err))
-	}
+	checkErrFatal(err, logger, "unable to create stream")
 
 	hostName := getHostname(cfg)
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
@@ -108,6 +102,10 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	if err := eg.Wait(); err != nil {
 		logger.Error("routine returned error", zap.Error(err))
 	}
+}
+
+func checkErrFatal(err error, logger *zap.Logger, msg string) {
+	logger.Fatal(msg, zap.Error(err))
 }
 
 func registerMsg(cfg config.Conf, hostName string, checkList checks.Checks) *api.RegisterMessage {
