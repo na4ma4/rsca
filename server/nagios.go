@@ -57,5 +57,9 @@ func writeCommand(logger *zap.Logger, command string) error {
 
 	_, err = f.WriteString(commandToWrite)
 
-	return fmt.Errorf("write command to nagios: %w", err)
+	if err != nil {
+		return fmt.Errorf("write command to nagios: %w", err)
+	}
+
+	return nil
 }

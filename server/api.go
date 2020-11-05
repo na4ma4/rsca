@@ -39,6 +39,7 @@ type metric struct {
 	PingMessages        prometheus.Counter
 	PingMessageErrors   prometheus.Counter
 	EventStatus         *prometheus.CounterVec
+	PingLatency         *prometheus.GaugeVec
 }
 
 type serverStream struct {
@@ -95,12 +96,18 @@ func NewServer(logger *zap.Logger, hostName string) *Server {
 				Subsystem: "server",
 				Help:      "number of tick messages that failed to send",
 			}),
+			PingLatency: promauto.NewGaugeVec(prometheus.GaugeOpts{
+				Name:      "ping_latency_ms",
+				Namespace: "rsca",
+				Subsystem: "server",
+				Help:      "ping latency in ms",
+			}, []string{"source"}),
 		},
 	}
 }
 
 // TriggerAll triggers all the services on a matching host.
-func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.EmptyResponse, error) {
+func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAllResponse, error) {
 	msg := &api.Message{
 		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
 		Message:  &api.Message_UpdateAllMessage{UpdateAllMessage: &api.UpdateAllMessage{Id: uuid.New().String()}},
@@ -111,11 +118,20 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.EmptyResp
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.EmptyResponse{}, nil
+	streamIDs := s.streamIDsFromRecipient(m)
+	hostNames := []string{}
+
+	for _, streamID := range streamIDs {
+		hostNames = append(hostNames, s.streamIDToHostname(streamID))
+	}
+
+	return &api.TriggerAllResponse{
+		Names: hostNames,
+	}, nil
 }
 
 // ListHosts returns a list of hosts currently registered with the server.
-func (s *Server) ListHosts(req *api.EmptyRequest, stream api.Admin_ListHostsServer) error {
+func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -258,6 +274,38 @@ func (s *Server) processPongMessage(
 		zap.String("streamID", streamID),
 		zap.String("ping.id", msg.PongMessage.GetId()),
 	)
+
+	if v := msg.PongMessage.GetTs(); v != nil {
+		td := time.Since(v.AsTime())
+		s.metric.PingLatency.WithLabelValues(s.streamIDToHostname(msg.PongMessage.GetStreamId())).Set(
+			float64(td.Milliseconds()),
+		)
+		s.setPingLatency(streamID, td)
+	}
+}
+
+func (s *Server) setPingLatency(streamID string, td time.Duration) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if v, ok := s.streams[streamID]; ok {
+		if v.Record != nil {
+			v.Record.PingLatency = ptypes.DurationProto(td)
+		}
+	}
+}
+
+func (s *Server) streamIDToHostname(streamID string) string {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if v, ok := s.streams[streamID]; ok {
+		if v.Record != nil {
+			return v.Record.GetName()
+		}
+	}
+
+	return ""
 }
 
 func (s *Server) compareSlices(s1, s2 []string) bool {
@@ -365,7 +413,10 @@ func (s *Server) Run(ctx context.Context, cfg config.Conf) func() error {
 
 				msg := &api.Message{
 					Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: &api.Members{Tag: []string{"_all"}}},
-					Message:  &api.Message_PingMessage{PingMessage: &api.PingMessage{Id: uuid.New().String()}},
+					Message: &api.Message_PingMessage{PingMessage: &api.PingMessage{
+						Id: uuid.New().String(),
+						Ts: ptypes.TimestampNow(),
+					}},
 				}
 				if err := s.Send(msg); err != nil {
 					s.logger.Error("send returned error", zap.Error(err))

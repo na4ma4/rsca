@@ -52,7 +52,11 @@ func triggerAllCommand(cmd *cobra.Command, args []string) {
 	}
 
 	if r != nil {
-		fmt.Println("Trigger message sent")
+		fmt.Printf("Trigger message sent to %d hosts\n", len(r.GetNames()))
+
+		for _, h := range r.GetNames() {
+			fmt.Println(h)
+		}
 
 		return
 	}

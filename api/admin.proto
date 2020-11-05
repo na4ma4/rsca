@@ -8,7 +8,7 @@ option go_package = "github.com/na4ma4/rsca/api";
 import "api/common.proto";
 
 service Admin {
-    rpc ListHosts(EmptyRequest) returns (stream Member);
-    rpc TriggerAll(Members) returns (EmptyResponse);
+    rpc ListHosts(Empty) returns (stream Member);
+    rpc TriggerAll(Members) returns (TriggerAllResponse);
 }
 

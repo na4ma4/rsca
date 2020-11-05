@@ -4,11 +4,15 @@ package acre.api;
 option go_package = "github.com/na4ma4/rsca/api";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 // import "google/api/annotations.proto";
 // import "api/common.proto";
 
-message EmptyRequest {}
-message EmptyResponse {}
+message Empty {}
+
+message TriggerAllResponse {
+    repeated string names = 1;
+}
 
 message Envelope {
     Member sender = 10;
@@ -31,7 +35,11 @@ message Member {
     repeated string tag = 12;
     repeated string service = 13;
     google.protobuf.Timestamp last_seen = 100;
-    string last_seen_ago = 101;
+    google.protobuf.Duration ping_latency = 102;
+
+    // Only used in rendering host lists, not transferred over the wire.
+    string last_seen_ago = 1001;
+    string latency = 1003;
 }
 
 // message Recipient {
@@ -59,12 +67,14 @@ message RegisterMessage {
 
 message PingMessage {
     string id = 1;
-    google.protobuf.Timestamp ts = 2;
+    string stream_id = 2;
+    google.protobuf.Timestamp ts = 4;
 }
 
 message PongMessage {
     string id = 1;
-    google.protobuf.Timestamp ts = 2;
+    string stream_id = 2;
+    google.protobuf.Timestamp ts = 4;
 }
 
 message UpdateAllMessage {

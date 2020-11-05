@@ -28,8 +28,9 @@ func ProcessPingMessage(
 		},
 		Message: &api.Message_PongMessage{
 			PongMessage: &api.PongMessage{
-				Id: msg.PingMessage.GetId(),
-				Ts: msg.PingMessage.GetTs(),
+				Id:       msg.PingMessage.GetId(),
+				StreamId: msg.PingMessage.GetStreamId(),
+				Ts:       msg.PingMessage.GetTs(),
 			},
 		},
 	})

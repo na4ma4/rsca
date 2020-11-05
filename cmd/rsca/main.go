@@ -100,12 +100,14 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	}
 
 	if err := eg.Wait(); err != nil {
-		logger.Error("routine returned error", zap.Error(err))
+		logger.Fatal("routine returned error", zap.Error(err))
 	}
 }
 
 func checkErrFatal(err error, logger *zap.Logger, msg string) {
-	logger.Fatal(msg, zap.Error(err))
+	if err != nil {
+		logger.Fatal(msg, zap.Error(err))
+	}
 }
 
 func registerMsg(cfg config.Conf, hostName string, checkList checks.Checks) *api.RegisterMessage {

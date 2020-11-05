@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -50,7 +51,7 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 
 	cc := api.NewAdminClient(gc)
 
-	stream, err := cc.ListHosts(ctx, &api.EmptyRequest{})
+	stream, err := cc.ListHosts(ctx, &api.Empty{})
 	if err != nil {
 		logger.Fatal("unable to receive ListHosts stream from server", zap.Error(err))
 	}
@@ -64,32 +65,55 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("unable to load template engine", zap.Error(err))
 	}
 
+	hostList := scrapeHostList(logger, stream)
+
+	printHostList(tmpl, hostList)
+}
+
+func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api.Member {
+	hostList := []*api.Member{}
+
 	for {
 		in, err := stream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
 				logger.Debug("closing stream", zap.Error(err))
 
-				return
+				return hostList
 			}
 
-			return
+			return hostList
 		}
 
 		if in.Service == nil {
 			in.Service = []string{}
+		} else {
+			sort.Strings(in.Service)
 		}
 
 		if in.Capability == nil {
 			in.Capability = []string{}
+		} else {
+			sort.Strings(in.Capability)
 		}
 
 		if in.Tag == nil {
 			in.Tag = []string{}
+		} else {
+			sort.Strings(in.Tag)
 		}
 
 		in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
+		in.Latency = in.PingLatency.AsDuration().String()
 
+		hostList = append(hostList, in)
+	}
+}
+
+func printHostList(tmpl *template.Template, hostList []*api.Member) {
+	sort.Slice(hostList, func(i, j int) bool { return hostList[i].Name < hostList[j].Name })
+
+	for _, in := range hostList {
 		_ = tmpl.Execute(os.Stdout, in)
 	}
 }
