@@ -11,12 +11,22 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Set up Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+        id: go
+      - name: Set go env
+        run: export PATH=${PATH}:`go env GOPATH`/bin
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v1
         with:
-          version: v1.32.2
-      - name: make lint
+          version: v1.32
+      - name: Run remaining linters
         run: make lint
 
   unit-test:
@@ -28,9 +38,11 @@ jobs:
         with:
           go-version: 1.15
         id: go
-      - name: set go env
+      - name: Set go env
         run: export PATH=${PATH}:`go env GOPATH`/bin
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: unit-test
+        with:
+          fetch-depth: 0
+      - name: Unit test
         run: make test
