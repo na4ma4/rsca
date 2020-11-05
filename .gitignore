@@ -1,3 +1,4 @@
 /.makefiles
 /artifacts
 test/test.cmd
+/dist

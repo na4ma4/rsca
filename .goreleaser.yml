@@ -1,0 +1,90 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+
+env:
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - make test
+    - go generate ./...
+    - go mod tidy
+    - go mod download
+
+# x-build-defaults: &build-defaults
+#   targets:
+#     - linux_amd64
+#     - windows_amd64
+#     - darwin_amd64
+#   flags:
+#     - -v
+#   ldflags:
+#     - -s -w
+#     - -X main.version={{.Version}}
+#     - -X main.gitHash={{.ShortCommit}}
+#     - -X main.buildDate={{.CommitDate}}
+
+builds:
+  - id: rsc
+    main: ./cmd/rsc
+    binary: rsc
+    targets:
+      - linux_amd64
+      - windows_amd64
+      - darwin_amd64
+    flags:
+      - -v
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.gitHash={{.ShortCommit}}
+      - -X main.buildDate={{.CommitDate}}
+  - id: rsca
+    main: ./cmd/rsca
+    binary: rsca
+    targets:
+      - linux_amd64
+      - windows_amd64
+      - darwin_amd64
+    flags:
+      - -v
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.gitHash={{.ShortCommit}}
+      - -X main.buildDate={{.CommitDate}}
+  - id: rscad
+    main: ./cmd/rscad
+    binary: rscad
+    targets:
+      - linux_amd64
+      - windows_amd64
+      - darwin_amd64
+    flags:
+      - -v
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.gitHash={{.ShortCommit}}
+      - -X main.buildDate={{.CommitDate}}
+
+archives:
+  # - replacements:
+  #     darwin: Darwin
+  #     linux: Linux
+  #     windows: Windows
+  #     amd64: x86_64
+
+checksum:
+  algorithm: sha256
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
