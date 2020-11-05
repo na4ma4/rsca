@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -17,6 +17,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Server is a api.RSCAServer for co-ordinating streams from clients.
@@ -44,7 +46,7 @@ type serverStream struct {
 }
 
 // NewServer returns a prepared server object.
-func NewServer(logger *zap.Logger, hostName string) api.RSCAServer {
+func NewServer(logger *zap.Logger, hostName string) *Server {
 	return &Server{
 		logger:  logger,
 		streams: map[string]*serverStream{},
@@ -96,21 +98,33 @@ func NewServer(logger *zap.Logger, hostName string) api.RSCAServer {
 	}
 }
 
-func newReceivedCounter(name string) *prometheus.CounterVec {
-	// lcName := strings.ToLower(name)
-	return promauto.NewCounterVec(prometheus.CounterOpts{
-		Name:      "received",
-		Namespace: "rsca",
-		Subsystem: "server",
-		Help:      fmt.Sprintf("received %s packets", name),
-	}, []string{name})
+// TriggerAll triggers all the services on a matching host.
+func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.EmptyResponse, error) {
+	msg := &api.Message{
+		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
+		Message:  &api.Message_UpdateAllMessage{UpdateAllMessage: &api.UpdateAllMessage{Id: uuid.New().String()}},
+	}
+	if err := s.Send(msg); err != nil {
+		s.logger.Error("send returned error", zap.Error(err))
 
-	// return promauto.NewCounter(prometheus.CounterOpts{
-	// 	Name:      fmt.Sprintf("received_%s", lcName),
-	// 	Namespace: "rsca",
-	// 	Subsystem: "server",
-	// 	Help:      fmt.Sprintf("received %s packets", name),
-	// })
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &api.EmptyResponse{}, nil
+}
+
+// ListHosts returns a list of hosts currently registered with the server.
+func (s *Server) ListHosts(req *api.EmptyRequest, stream api.Admin_ListHostsServer) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	for _, m := range s.streams {
+		if err := stream.Send(m.Record); err != nil {
+			return status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	return nil
 }
 
 // Pipe handles incoming streams and maintains the stream map.
@@ -133,48 +147,39 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 		delete(s.streams, streamID)
 	}()
 
+	return s.processPipe(streamID, stream)
+}
+
+// processPipe is the main message handler.
+func (s *Server) processPipe(streamID string, stream api.RSCA_PipeServer) error {
 	for {
 		in, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF || errors.Is(err, context.Canceled) {
+				s.logger.Debug("closing stream", zap.String("stream.id", streamID), zap.Error(err))
 
-		switch {
-		case err == io.EOF:
-			s.logger.Debug("closing stream", zap.String("stream.id", streamID))
-
-			return nil
-		case errors.Is(err, context.Canceled):
-			s.logger.Debug("closing stream (context cancelled)", zap.String("stream.id", streamID), zap.Error(err))
-
-			return nil
-		case err != nil:
-			s.logger.Debug("closing stream (error)", zap.String("stream.id", streamID), zap.Error(err))
+				return nil
+			}
 
 			return err
 		}
 
+		s.updateLastSeen(streamID, time.Now())
+
 		switch msg := in.Message.(type) {
 		case *api.Message_EventMessage:
-			s.metric.Received.WithLabelValues("_all", "EventMessage").Inc()
-			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "EventMessage").Inc()
-			s.metric.EventStatus.WithLabelValues(
-				in.Envelope.Sender.GetName(),
-				msg.EventMessage.GetCheck(),
-				msg.EventMessage.GetStatus().String(),
-			).Inc()
-			s.processEventMessage(msg)
+			s.processEventMessage(in, msg)
 		case *api.Message_RegisterMessage:
-			s.metric.Received.WithLabelValues("_all", "RegisterMessage").Inc()
-			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "RegisterMessage").Inc()
-			s.processRegisterMessage(streamID, msg)
+			s.processRegisterMessage(streamID, in, msg)
 		case *api.Message_PingMessage:
 			s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
 			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PingMessage").Inc()
+
 			if err := common.ProcessPingMessage(s.logger, stream, s.hostname, in, msg); err != nil {
 				s.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
 			}
 		case *api.Message_PongMessage:
-			s.metric.Received.WithLabelValues("_all", "PongMessage").Inc()
-			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PongMessage").Inc()
-			s.processPongMessage(streamID, msg)
+			s.processPongMessage(streamID, in, msg)
 		default:
 			s.metric.Received.WithLabelValues("_all", "Unknown").Inc()
 			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "Unknown").Inc()
@@ -183,9 +188,33 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 	}
 }
 
+func (s *Server) updateLastSeen(streamID string, t time.Time) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if v, ok := s.streams[streamID]; ok {
+		if v.Record != nil {
+			ts, err := ptypes.TimestampProto(t)
+			if err != nil {
+				return
+			}
+
+			v.Record.LastSeen = ts
+		}
+	}
+}
+
 func (s *Server) processEventMessage(
+	in *api.Message,
 	msg *api.Message_EventMessage,
 ) {
+	s.metric.Received.WithLabelValues("_all", "EventMessage").Inc()
+	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "EventMessage").Inc()
+	s.metric.EventStatus.WithLabelValues(
+		in.Envelope.Sender.GetName(),
+		msg.EventMessage.GetCheck(),
+		msg.EventMessage.GetStatus().String(),
+	).Inc()
 	s.logger.Debug("Received EventMessage")
 	s.logger.Info("received check data", zap.String("response.id", msg.EventMessage.GetId()),
 		zap.String("check.name", msg.EventMessage.GetCheck()), zap.String("check.status", msg.EventMessage.Status.String()),
@@ -198,8 +227,11 @@ func (s *Server) processEventMessage(
 
 func (s *Server) processRegisterMessage(
 	streamID string,
+	in *api.Message,
 	msg *api.Message_RegisterMessage,
 ) {
+	s.metric.Received.WithLabelValues("_all", "RegisterMessage").Inc()
+	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "RegisterMessage").Inc()
 	s.logger.Info("client registered",
 		zap.String("rsca.client.name", msg.RegisterMessage.Member.GetName()),
 		zap.Strings("rsca.client.tags", msg.RegisterMessage.Member.GetTag()),
@@ -216,8 +248,11 @@ func (s *Server) processRegisterMessage(
 
 func (s *Server) processPongMessage(
 	streamID string,
+	in *api.Message,
 	msg *api.Message_PongMessage,
 ) {
+	s.metric.Received.WithLabelValues("_all", "PongMessage").Inc()
+	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PongMessage").Inc()
 	s.logger.Debug("Received PongMessage",
 		zap.String("streamID", streamID),
 		zap.String("ping.id", msg.PongMessage.GetId()),
@@ -292,16 +327,17 @@ func (s *Server) Send(msg *api.Message) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	var errs []error
+	errs := []error{nil}
 
 	for _, streamID := range streamIDs {
 		if v, ok := s.streams[streamID]; ok {
 			s.metric.PingMessages.Inc()
-			err := v.Stream.Send(msg)
-			if err != nil {
+
+			if err := v.Stream.Send(msg); err != nil {
 				s.metric.PingMessageErrors.Inc()
+
+				errs = append(errs, err)
 			}
-			errs = append(errs, err)
 		}
 	}
 
@@ -317,6 +353,7 @@ func (s *Server) Run(ctx context.Context, cfg config.Conf) func() error {
 			select {
 			case <-ctx.Done():
 				ticker.Stop()
+				s.logger.Debug("server.api:Run() context done", zap.Error(ctx.Err()))
 
 				return nil
 			case t := <-ticker.C:

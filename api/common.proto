@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package acre.api;
+option go_package = "github.com/na4ma4/rsca/api";
+
+import "google/protobuf/timestamp.proto";
+// import "google/api/annotations.proto";
+// import "api/common.proto";
+
+message EmptyRequest {}
+message EmptyResponse {}
+
+message Envelope {
+    Member sender = 10;
+    Members recipient = 11;
+}
+
+message Members {
+    repeated string id = 10;
+    repeated string name = 11;
+    repeated string capability = 12;
+    repeated string tag = 13;
+    repeated string service = 14;
+}
+
+message Member {
+    string id = 1;
+    string internal_id = 2;
+    string name = 10;
+    repeated string capability = 11;
+    repeated string tag = 12;
+    repeated string service = 13;
+    google.protobuf.Timestamp last_seen = 100;
+}
+
+// message Recipient {
+//     repeated string id = 10;
+//     repeated string name = 11;
+//     repeated string capability = 12;
+//     repeated string tag = 13;
+//     repeated string service = 14;
+// }
+
+message Message {
+    Envelope envelope = 1;
+    oneof message {
+        RegisterMessage register_message = 100;
+        PingMessage ping_message = 101;
+        PongMessage pong_message = 102;
+        EventMessage event_message = 103;
+        UpdateAllMessage update_all_message = 104;
+    }
+}
+
+message RegisterMessage {
+    Member member = 1;
+}
+
+message PingMessage {
+    string id = 1;
+    google.protobuf.Timestamp ts = 2;
+}
+
+message PongMessage {
+    string id = 1;
+    google.protobuf.Timestamp ts = 2;
+}
+
+message UpdateAllMessage {
+    string id = 1;
+}
+
+enum Status {
+    OK = 0;
+    WARNING = 1;
+    CRITICAL = 2;
+    UNKNOWN = 3;
+}
+
+enum CheckType {
+    HOST = 0;
+    SERVICE = 1;
+}
+
+message EventMessage {
+    string hostname = 1;
+    CheckType type = 2;
+    string check = 3;
+    Status status = 4;
+    string output = 5;
+    string perfdata = 6;
+    google.protobuf.Timestamp request_timestamp = 7;
+    int32 retries = 8;
+    string id = 9;
+}

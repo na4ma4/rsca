@@ -94,6 +94,7 @@ func (c *Client) Pipe(ctx context.Context, cancel context.CancelFunc, stream api
 
 // Pipe processes a stream and the inbox received from the server.
 func (c *Client) processUpdateAll() {
+	c.logger.Debug("processUpdateAll() called")
 	c.checks.NextRun(time.Time{})
 }
 

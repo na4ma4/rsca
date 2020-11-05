@@ -19,23 +19,23 @@ func ConfigInit() {
 	viper.SetDefault("general.timeout", "3s")
 	viper.SetDefault("general.retry", true)
 	viper.SetDefault("general.max-retries", 3)
-	viper.SetDefault("general.check-tick", "9s")
+	viper.SetDefault("general.check-tick", "90s")
 	viper.SetDefault("general.tags", []string{})
 
 	viper.RegisterAlias("command.timeout", "general.timeout")
 
 	viper.SetDefault("nagios.command-file", "/tmp/nagios.cmd")
 
-	viper.SetDefault("client.bind", "127.0.0.1:5888")
+	viper.SetDefault("client.server", "127.0.0.1:5888")
 
-	viper.SetDefault("server.bind", "0.0.0.0:5888")
+	viper.SetDefault("server.listen", "0.0.0.0:5888")
 	viper.SetDefault("server.tick", "5s")
 
 	viper.SetDefault("watchdog.enabled", false)
 	viper.SetDefault("watchdog.tick", "60s")
 
 	viper.SetDefault("metrics.enabled", true)
-	viper.SetDefault("metrics.bind", "localhost:2112")
+	viper.SetDefault("metrics.listen", "localhost:2112")
 
 	_ = viper.ReadInConfig()
 }

@@ -30,6 +30,10 @@ GENERATED_FILES += test/test.cmd
 run: artifacts/build/debug/$(GOHOSTOS)/$(GOHOSTARCH)/rsca
 	"$<" $(RUN_ARGS)
 
+.PHONY: run-admin
+run-admin: artifacts/build/debug/$(GOHOSTOS)/$(GOHOSTARCH)/rsc
+	"$<" $(RUN_ARGS)
+
 .PHONY: run-daemon
 run-daemon: artifacts/build/debug/$(GOHOSTOS)/$(GOHOSTARCH)/rscad
 	"$<" $(RUN_ARGS)
@@ -45,6 +49,7 @@ install: $(REQ) $(_SRC) | $(USE)
 
 	CGO_ENABLED=$(CGO_ENABLED) GOOS="$(OS)" GOARCH="$(ARCH)" go install $(ARGS) "./cmd/..."
 
+
 ######################
 # Test
 ######################
@@ -58,6 +63,7 @@ test/test.cmd:
 # 	-@docker stop archpod-test-server
 # 	docker build -t archpod-test-server:latest "$(<D)"
 # 	docker run --rm -d --name "archpod-test-server" -p 8018:80/tcp archpod-test-server:latest
+
 
 ######################
 # CFSSL
@@ -95,6 +101,7 @@ artifacts/certs/client.pem: test/client.json $(CFSSL) $(CFSSLJSON) artifacts/cer
 	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="client" "$(<)" | $(CFSSLJSON) -bare artifacts/certs/client -
 	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="client" artifacts/certs/client.csr | $(CFSSLJSON) -bare artifacts/certs/client
 
+
 ######################
 # Linting
 ######################
@@ -128,6 +135,7 @@ lint:: $(GOLINT) $(MISSPELL) $(GOLANGCILINT) $(STATICCHECK)
 	$(STATICCHECK) -fail "all,-U1001" -unused.whole-program ./...
 
 ci:: lint
+
 
 ######################
 # Preload Tools

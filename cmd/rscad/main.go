@@ -50,7 +50,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lis, err := net.Listen("tcp", cfg.GetString("server.bind"))
+	lis, err := net.Listen("tcp", cfg.GetString("server.listen"))
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
@@ -60,7 +60,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
 
-	logger.Info("server listening", zap.String("bind", viper.GetString("server.bind")))
+	logger.Info("server listening", zap.String("bind", viper.GetString("server.listen")))
 
 	hostName := getHostname(cfg)
 	eg, ctx := errgroup.WithContext(ctx)
@@ -68,12 +68,13 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	gc := grpc.NewServer(cp.ServerOption())
 
 	api.RegisterRSCAServer(gc, sapi)
+	api.RegisterAdminServer(gc, sapi)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
-	eg.Go(sapi.(*server.Server).Run(ctx, cfg))
+	eg.Go(sapi.Run(ctx, cfg))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(func() error { return gc.Serve(lis) })
 
@@ -81,7 +82,9 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		go func() {
 			http.Handle("/metrics", promhttp.Handler())
 
-			if err := http.ListenAndServe(cfg.GetString("metrics.bind"), nil); err != nil {
+			if err := http.ListenAndServe(cfg.GetString("metrics.listen"), nil); err != nil {
+				logger.Debug("metrics.Listen context done", zap.Error(ctx.Err()))
+
 				cancel()
 			}
 		}()

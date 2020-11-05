@@ -52,22 +52,24 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	defer cancel()
 
 	eg, ctx := errgroup.WithContext(ctx)
-	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("client.bind")))
+	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("client.server")))
 
 	logger.Debug("Connecting to API",
-		zap.String("bind", grpcServer(cfg.GetString("client.bind"))),
+		zap.String("bind", grpcServer(cfg.GetString("client.server"))),
 		zap.String("dns-name", serverHostName),
 	)
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("server.cert-dir"), false)
+	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), false)
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
 
-	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.bind")), cp.DialOption(serverHostName))
+	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
 	if err != nil {
 		logger.Fatal("failed to connect to server", zap.Error(err))
 	}
+
+	logger.Debug("server hostname", zap.String("server.host-name", serverHostName))
 
 	rc := api.NewRSCAClient(gc)
 	respChan := make(chan *api.EventMessage)
@@ -86,7 +88,6 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		Envelope: &api.Envelope{Sender: ms, Recipient: api.MembersByID("_server")},
 		Message:  &api.Message_RegisterMessage{RegisterMessage: regmsg},
 	}
-
 	c := make(chan os.Signal, 1)
 
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -99,7 +100,6 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("unable to register with server", zap.Error(err))
 	}
 
-	// Wait for the first error from any goroutine.
 	if err := eg.Wait(); err != nil {
 		logger.Error("routine returned error", zap.Error(err))
 	}

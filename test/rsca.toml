@@ -5,10 +5,11 @@ tags=["darwin"]
 command-file="test/test.cmd"
 
 [client]
-server="127.0.0.1:15600"
+server="127.0.0.1:5888"
+cert-dir="artifacts/certs"
 
 [server]
-listen="0.0.0.0:15600"
+listen="0.0.0.0:5888"
 cert-dir="artifacts/certs"
 
 [check.HOST_CHECK]
