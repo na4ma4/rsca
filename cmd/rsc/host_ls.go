@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -27,7 +28,7 @@ var cmdHostList = &cobra.Command{
 // nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHostList.PersistentFlags().StringP("format", "f",
-		"{{.Name}}\t{{time .LastSeen}}\t{{.Tag}}\t{{.Capability}}\t{{.Service}}", "Output format (go template)",
+		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{.Service}}", "Output format (go template)",
 	)
 
 	_ = viper.BindPFlag("host.list.format", cmdHostList.PersistentFlags().Lookup("format"))
@@ -91,6 +92,8 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 		if in.Tag == nil {
 			in.Tag = []string{}
 		}
+
+		in.LastSeenAgo = time.Now().Sub(in.LastSeen.AsTime()).String()
 
 		_ = tmpl.Execute(os.Stdout, in)
 	}

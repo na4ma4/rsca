@@ -36,6 +36,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug output")
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	_ = viper.BindEnv("debug", "DEBUG")
+
+	rootCmd.PersistentFlags().Bool("watchdog", false, "Enable systemd watchdog functionality")
+	_ = viper.BindPFlag("watchdog.enabled", rootCmd.PersistentFlags().Lookup("watchdog"))
+	_ = viper.BindEnv("watchdog.enabled", "WATCHDOG")
 }
 
 func main() {
@@ -54,12 +58,14 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg, ctx := errgroup.WithContext(ctx)
 	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("client.server")))
 
-	logger.Debug("Connecting to API",
-		zap.String("bind", grpcServer(cfg.GetString("client.server"))),
-		zap.String("dns-name", serverHostName),
-	)
+	if cfg.GetString("client.sni") != "" {
+		serverHostName = cfg.GetString("client.sni")
+	}
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), false)
+	logger.Debug("Connecting to API", zap.String("bind", grpcServer(cfg.GetString("client.server"))),
+		zap.String("dns-name", serverHostName))
+
+	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), cfg.GetBool("client.server-cert-type"))
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
@@ -68,8 +74,6 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal("failed to connect to server", zap.Error(err))
 	}
-
-	logger.Debug("server hostname", zap.String("server.host-name", serverHostName))
 
 	rc := api.NewRSCAClient(gc)
 	respChan := make(chan *api.EventMessage)
@@ -94,6 +98,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg.Go(cl.Pipe(ctx, cancel, stream))
 	eg.Go(checks.RunChecks(ctx, cfg, logger, checkList, respChan))
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
+	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(cl.RunEvents(ctx, ms, respChan))
 
 	if err = stream.Send(streamMsg); err != nil {

@@ -280,6 +280,8 @@ func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 
 	streamIDs := make(map[string]struct{})
 
+	// s.logger.Debug("streamIDsFromRecipient()", zap.Reflect("registered.streams", s.streams))
+
 	for streamID, stream := range s.streams {
 		if stream.Record == nil {
 			continue
@@ -301,7 +303,7 @@ func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 			streamIDs[streamID] = struct{}{}
 		}
 
-		if stream.Record.Tag != nil && s.compareSlices(append(stream.Record.Tag, "_all"), in.Tag) {
+		if stream.Record.Tag != nil || s.compareSlices(append(stream.Record.Tag, "_all"), in.Tag) {
 			streamIDs[streamID] = struct{}{}
 		}
 

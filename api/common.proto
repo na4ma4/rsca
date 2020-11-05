@@ -31,6 +31,7 @@ message Member {
     repeated string tag = 12;
     repeated string service = 13;
     google.protobuf.Timestamp last_seen = 100;
+    string last_seen_ago = 101;
 }
 
 // message Recipient {

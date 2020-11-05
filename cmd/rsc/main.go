@@ -53,7 +53,7 @@ func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.Cl
 		zap.String("dns-name", serverHostName),
 	)
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), false)
+	cp, err := certs.NewFileCertificateProvider(cfg.GetString("client.cert-dir"), cfg.GetBool("client.server-cert-type"))
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}

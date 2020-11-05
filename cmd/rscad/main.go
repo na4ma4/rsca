@@ -35,6 +35,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug output")
 	_ = viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	_ = viper.BindEnv("debug", "DEBUG")
+
+	rootCmd.PersistentFlags().Bool("watchdog", false, "Enable systemd watchdog functionality")
+	_ = viper.BindPFlag("watchdog.enabled", rootCmd.PersistentFlags().Lookup("watchdog"))
+	_ = viper.BindEnv("watchdog.enabled", "WATCHDOG")
 }
 
 func main() {
@@ -55,7 +59,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	cp, err := certs.NewFileCertificateProvider(cfg.GetString("server.cert-dir"), true)
+	cp, err := certs.NewFileCertificateProvider(cfg.GetString("server.cert-dir"), cfg.GetBool("server.server-cert-type"))
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
