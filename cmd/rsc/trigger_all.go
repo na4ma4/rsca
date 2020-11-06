@@ -13,21 +13,29 @@ import (
 
 // nolint: gochecknoglobals // cobra uses globals in main
 var cmdTriggerAll = &cobra.Command{
-	Use:     "all",
+	Use:     "all [options ...] [host...] [hostN]",
 	Aliases: []string{"a"},
 	Short:   "Trigger all services on a host",
 	Run:     triggerAllCommand,
-	Args:    cobra.NoArgs,
+	Args:    cobra.MinimumNArgs(0),
 }
 
 // nolint:gochecknoinits // init is used in main for cobra
 func init() {
+	cmdTrigger.AddCommand(cmdTriggerAll)
 	cmdTriggerAll.PersistentFlags().StringSliceP("tags", "t", []string{},
 		"tags to target, OR'd list, specified argument repeatedly to target multiple tags",
 	)
-	cmdTrigger.AddCommand(cmdTriggerAll)
+	cmdTriggerAll.PersistentFlags().StringSliceP("services", "s", []string{},
+		"services to target, OR'd list, specified argument repeatedly to target multiple services",
+	)
+	cmdTriggerAll.PersistentFlags().StringSliceP("capabilities", "c", []string{},
+		"capabilities to target, OR'd list, specified argument repeatedly to target multiple capabilities",
+	)
 
 	_ = viper.BindPFlag("trigger.all.tags", cmdTriggerAll.PersistentFlags().Lookup("tags"))
+	_ = viper.BindPFlag("trigger.all.services", cmdTriggerAll.PersistentFlags().Lookup("services"))
+	_ = viper.BindPFlag("trigger.all.capabilities", cmdTriggerAll.PersistentFlags().Lookup("capabilities"))
 }
 
 func triggerAllCommand(cmd *cobra.Command, args []string) {
@@ -43,7 +51,13 @@ func triggerAllCommand(cmd *cobra.Command, args []string) {
 	cc := api.NewAdminClient(gc)
 
 	ms := &api.Members{
-		Tag: cfg.GetStringSlice("trigger.all.tags"),
+		Tag:        cfg.GetStringSlice("trigger.all.tags"),
+		Service:    cfg.GetStringSlice("trigger.all.services"),
+		Capability: cfg.GetStringSlice("trigger.all.capabilities"),
+	}
+
+	if len(args) > 0 {
+		ms.Name = args
 	}
 
 	r, err := cc.TriggerAll(ctx, ms)
