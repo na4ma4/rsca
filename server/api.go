@@ -277,7 +277,7 @@ func (s *Server) processPongMessage(
 
 	if v := msg.PongMessage.GetTs(); v != nil {
 		td := time.Since(v.AsTime())
-		s.metric.PingLatency.WithLabelValues(s.streamIDToHostname(msg.PongMessage.GetStreamId())).Set(
+		s.metric.PingLatency.WithLabelValues(s.streamIDToHostname(streamID)).Set(
 			float64(td.Milliseconds()),
 		)
 		s.setPingLatency(streamID, td)
