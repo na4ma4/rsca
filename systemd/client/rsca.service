@@ -10,5 +10,5 @@ ExecStart=/usr/sbin/rsca --watchdog
 Type=simple
 User=root
 Group=root
-Restart=on-failure
+Restart=always
 WatchdogSec=120

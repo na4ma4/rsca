@@ -10,5 +10,5 @@ ExecStart=/usr/sbin/rscad --watchdog
 Type=simple
 User=nagios
 Group=nagios
-Restart=on-failure
+Restart=always
 WatchdogSec=90
