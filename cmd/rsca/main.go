@@ -126,9 +126,12 @@ func registerMsg(cfg config.Conf, hostName string, checkList checks.Checks) *api
 		Member: &api.Member{
 			Id:         uuid.New().String(),
 			Name:       hostName,
-			Capability: []string{"client"},
+			Capability: []string{"client", fmt.Sprintf("rsca-%s", version)},
 			Service:    checkNames,
 			Tag:        cfg.GetStringSlice("general.tags"),
+			Version:    version,
+			BuildDate:  buildDate,
+			GitHash:    gitHash,
 		},
 	}
 }

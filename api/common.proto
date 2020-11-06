@@ -34,6 +34,11 @@ message Member {
     repeated string capability = 11;
     repeated string tag = 12;
     repeated string service = 13;
+
+    string version = 90;
+    string git_hash = 91;
+    string build_date = 92;
+
     google.protobuf.Timestamp last_seen = 100;
     google.protobuf.Duration ping_latency = 102;
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 	"text/template"
 	"time"
 
@@ -54,6 +55,10 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 	stream, err := cc.ListHosts(ctx, &api.Empty{})
 	if err != nil {
 		logger.Fatal("unable to receive ListHosts stream from server", zap.Error(err))
+	}
+
+	if strings.Contains(viper.GetString("host.list.format"), "\\t") {
+		viper.Set("host.list.format", strings.ReplaceAll(viper.GetString("host.list.format"), "\\t", "\t"))
 	}
 
 	if !strings.HasSuffix(viper.GetString("host.list.format"), "\n") {
@@ -113,7 +118,27 @@ func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api
 func printHostList(tmpl *template.Template, hostList []*api.Member) {
 	sort.Slice(hostList, func(i, j int) bool { return hostList[i].Name < hostList[j].Name })
 
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	_ = tmpl.Execute(w, map[string]string{
+		"Id":          "ID",
+		"BuildDate":   "Build Date",
+		"Capability":  "Capabilities",
+		"GitHash":     "Git Hash",
+		"InternalId":  "Internal ID",
+		"LastSeen":    "Last Seen",
+		"LastSeenAgo": "Last Seen Ago",
+		"Latency":     "Latency",
+		"Name":        "Name",
+		"PingLatency": "Ping Latency",
+		"Service":     "Services",
+		"Tag":         "Tags",
+		"Version":     "Version",
+	})
+
 	for _, in := range hostList {
-		_ = tmpl.Execute(os.Stdout, in)
+		_ = tmpl.Execute(w, in)
 	}
+
+	w.Flush()
 }
