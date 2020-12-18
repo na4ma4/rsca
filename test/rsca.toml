@@ -1,5 +1,6 @@
 [general]
 tags=["darwin"]
+registration-interval="10s"
 
 [default]
 timeout="5s"

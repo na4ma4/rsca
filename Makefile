@@ -17,6 +17,8 @@ GENERATED_FILES += artifacts/certs/server.pem
 GENERATED_FILES += artifacts/certs/server-key.pem
 GENERATED_FILES += artifacts/certs/client.pem
 GENERATED_FILES += artifacts/certs/client-key.pem
+GENERATED_FILES += artifacts/certs/cert.pem
+GENERATED_FILES += artifacts/certs/key.pem
 GENERATED_FILES += test/test.cmd
 
 -include .makefiles/Makefile
@@ -104,6 +106,15 @@ artifacts/certs/ca.pem: $(CFSSL) $(CFSSLJSON) artifacts/certs/ca-config.json tes
 	-@mkdir -p "$(@D)"
 	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="ca" test/ca-csr.json | $(CFSSLJSON) -bare artifacts/certs/ca -
 	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="ca" -csr=artifacts/certs/ca.csr test/ca-csr.json | $(CFSSLJSON) -bare artifacts/certs/ca
+
+artifacts/certs/cert.pem: test/admin.json $(CFSSL) $(CFSSLJSON) artifacts/certs/ca.pem
+	-@mkdir -p "$(@D)"
+	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="client" "$(<)" | $(CFSSLJSON) -bare artifacts/certs/cert -
+	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="client" artifacts/certs/cert.csr | $(CFSSLJSON) -bare artifacts/certs/cert
+
+artifacts/certs/key.pem: artifacts/certs/cert.pem
+	-@mkdir -p "$(@D)"
+	cp artifacts/certs/cert-key.pem "$(@)"
 
 artifacts/certs/server.pem: test/host.json $(CFSSL) $(CFSSLJSON) artifacts/certs/ca.pem
 	-@mkdir -p "$(@D)"

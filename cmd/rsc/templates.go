@@ -67,7 +67,7 @@ func timeFormat(source interface{}) string {
 	case *timestamp.Timestamp:
 		return s.AsTime().Format(time.RFC3339)
 	default:
-		return fmt.Sprintf("%q", source)
+		return fmt.Sprintf("%s", source)
 	}
 }
 

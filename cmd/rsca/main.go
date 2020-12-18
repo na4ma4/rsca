@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/client"
@@ -16,6 +16,7 @@ import (
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/mainconfig"
+	"github.com/na4ma4/rsca/internal/register"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -83,20 +84,19 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	hostName := getHostname(cfg)
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
 	cl := client.NewClient(logger, hostName, checkList)
-	regmsg := registerMsg(cfg, hostName, checkList)
-	ms := &api.Member{Name: hostName}
+	regmsg := register.New(cfg, hostName, version, buildDate, gitHash, checkList, time.Now())
 	streamMsg := &api.Message{
-		Envelope: &api.Envelope{Sender: ms, Recipient: api.MembersByID("_server")},
-		Message:  &api.Message_RegisterMessage{RegisterMessage: regmsg},
+		Envelope: &api.Envelope{Sender: regmsg.Member(), Recipient: api.MembersByID("_server")},
+		Message:  &api.Message_RegisterMessage{RegisterMessage: regmsg.Message()},
 	}
 	c := make(chan os.Signal, 1)
 
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	eg.Go(cl.Pipe(ctx, cancel, stream))
+	eg.Go(cl.Pipe(ctx, cancel, cfg, stream))
 	eg.Go(checks.RunChecks(ctx, cfg, logger, checkList, respChan))
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
-	eg.Go(cl.RunEvents(ctx, ms, respChan))
+	eg.Go(cl.RunEvents(ctx, regmsg, respChan))
 
 	if err = stream.Send(streamMsg); err != nil {
 		logger.Fatal("unable to register with server", zap.Error(err))
@@ -113,28 +113,50 @@ func checkErrFatal(err error, logger *zap.Logger, msg string) {
 	}
 }
 
-func registerMsg(cfg config.Conf, hostName string, checkList checks.Checks) *api.RegisterMessage {
-	checkNames := []string{}
+// Replaced with register package
+// func registerMsg(
+// 	cfg config.Conf,
+// 	hostName string,
+// 	checkList checks.Checks,
+// 	startTime time.Time,
+// ) *api.RegisterMessage {
+// 	checkNames := []string{}
 
-	for _, check := range checkList {
-		if check.Type == api.CheckType_SERVICE {
-			checkNames = append(checkNames, check.Name)
-		}
-	}
+// 	for _, check := range checkList {
+// 		if check.Type == api.CheckType_SERVICE {
+// 			checkNames = append(checkNames, check.Name)
+// 		}
+// 	}
 
-	return &api.RegisterMessage{
-		Member: &api.Member{
-			Id:         uuid.New().String(),
-			Name:       hostName,
-			Capability: []string{"client", fmt.Sprintf("rsca-%s", version)},
-			Service:    checkNames,
-			Tag:        cfg.GetStringSlice("general.tags"),
-			Version:    version,
-			BuildDate:  buildDate,
-			GitHash:    gitHash,
-		},
-	}
-}
+// 	mb := &api.Member{
+// 		Id:         uuid.New().String(),
+// 		Name:       hostName,
+// 		Capability: []string{"client", fmt.Sprintf("rsca-%s", version)},
+// 		Service:    checkNames,
+// 		Tag:        cfg.GetStringSlice("general.tags"),
+// 		Version:    version,
+// 		BuildDate:  buildDate,
+// 		GitHash:    gitHash,
+// 	}
+
+// 	if ts, err := ptypes.TimestampProto(startTime); err == nil {
+// 		mb.ProcessStart = ts
+// 	}
+
+// 	if ut, err := host.BootTimeWithContext(context.Background()); err == nil {
+// 		if ts, err := ptypes.TimestampProto(time.Unix(int64(ut), 0)); err == nil {
+// 			mb.SystemStart = ts
+// 		}
+// 	}
+
+// 	if is, err := api.InfoWithContext(context.Background(), time.Now()); err == nil {
+// 		mb.InfoStat = is
+// 	}
+
+// 	return &api.RegisterMessage{
+// 		Member: mb,
+// 	}
+// }
 
 func grpcServer(server string) string {
 	host, port, err := net.SplitHostPort(server)

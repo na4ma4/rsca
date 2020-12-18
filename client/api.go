@@ -6,9 +6,11 @@ import (
 	"io"
 	"time"
 
+	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/register"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,6 +23,7 @@ type Client struct {
 	checks   checks.Checks
 	inbox    chan *api.Message
 	outbox   chan *api.Message
+	register *register.Message
 }
 
 // NewClient returns a setup api.RSCAClient.
@@ -61,8 +64,15 @@ func (c *Client) streamMessages(cancel context.CancelFunc, stream api.RSCA_PipeC
 	}
 }
 
-// Pipe processes a stream and the inbox received from the server.
-func (c *Client) Pipe(ctx context.Context, cancel context.CancelFunc, stream api.RSCA_PipeClient) func() error {
+// Pipe processes the stream and the outbox back to the server.
+func (c *Client) Pipe(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	cfg config.Conf,
+	stream api.RSCA_PipeClient,
+) func() error {
+	registrationTicker := time.NewTicker(cfg.GetDuration("general.registration-interval"))
+
 	go c.streamMessages(cancel, stream)
 
 	return func() error {
@@ -70,33 +80,47 @@ func (c *Client) Pipe(ctx context.Context, cancel context.CancelFunc, stream api
 			select {
 			case <-ctx.Done():
 				c.logger.Debug("context cancelled")
+				registrationTicker.Stop()
+				close(c.outbox)
+				close(c.inbox)
 
 				return nil
-			case out := <-c.outbox:
-				if err := stream.Send(out); err != nil {
-					c.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
+			case _, ok := <-registrationTicker.C:
+				if ok {
+					go c.SendRepeatRegistration(ctx)
 				}
-			case in := <-c.inbox:
-				switch msg := in.Message.(type) {
-				case *api.Message_PingMessage:
-					if err := common.ProcessPingMessage(c.logger, stream, c.hostname, in, msg); err != nil {
-						c.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
+			case out, ok := <-c.outbox:
+				if ok {
+					if err := stream.Send(out); err != nil {
+						c.logger.Error("unable to send message", zap.Error(err))
 					}
-				case *api.Message_UpdateAllMessage:
-					c.processUpdateAll()
-				default:
-					c.logger.Info("Received unhandled message", zap.Reflect("message", in))
 				}
-				c.logger.Debug("message processing finished")
 			}
 		}
 	}
 }
 
-// Pipe processes a stream and the inbox received from the server.
+// processUpdateAll processes a trigger all message.
 func (c *Client) processUpdateAll() {
 	c.logger.Debug("processUpdateAll() called")
 	c.checks.NextRun(time.Time{})
+}
+
+// processRepeatRegister processes a repeat-registration request message.
+func (c *Client) processRepeatRegister(ctx context.Context) {
+	c.logger.Debug("processRepeatRegister() called")
+	c.SendRepeatRegistration(ctx)
+}
+
+// SendRepeatRegistration sends the registration message to the server.
+func (c *Client) SendRepeatRegistration(ctx context.Context) {
+	c.logger.Debug("sending repeat registration message")
+	c.register.UpdateInfoStat(ctx)
+
+	c.outbox <- &api.Message{
+		Envelope: &api.Envelope{Sender: c.register.Member(), Recipient: api.MembersByID("_server")},
+		Message:  &api.Message_MemberUpdateMessage{MemberUpdateMessage: c.register.UpdateMessage()},
+	}
 }
 
 // // Send adds a message to the outbox to be sent, may block if channel is full.
@@ -104,8 +128,26 @@ func (c *Client) processUpdateAll() {
 // 	c.inbox <- msg
 // }
 
+func (c *Client) wrapEventMessage(in *api.EventMessage) *api.Message {
+	return &api.Message{
+		Envelope: &api.Envelope{
+			Recipient: api.MembersByID("_server"),
+			Sender:    c.register.Member(),
+		},
+		Message: &api.Message_EventMessage{
+			EventMessage: in,
+		},
+	}
+}
+
 // RunEvents runs as a go routine that processes the response channel and creates messages to add to the outbox.
-func (c *Client) RunEvents(ctx context.Context, ms *api.Member, respChan chan *api.EventMessage) func() error {
+func (c *Client) RunEvents(
+	ctx context.Context,
+	regmsg *register.Message,
+	respChan chan *api.EventMessage,
+) func() error {
+	c.register = regmsg
+
 	return func() error {
 		for {
 			select {
@@ -113,15 +155,25 @@ func (c *Client) RunEvents(ctx context.Context, ms *api.Member, respChan chan *a
 				c.logger.Debug("context cancelled")
 
 				return nil
-			case in := <-respChan:
-				c.outbox <- &api.Message{
-					Envelope: &api.Envelope{
-						Recipient: api.MembersByID("_server"),
-						Sender:    ms,
-					},
-					Message: &api.Message_EventMessage{
-						EventMessage: in,
-					},
+			case in, ok := <-respChan:
+				if ok {
+					c.outbox <- c.wrapEventMessage(in)
+				}
+			case in, ok := <-c.inbox:
+				if ok {
+					switch msg := in.Message.(type) {
+					case *api.Message_PingMessage:
+						go func() {
+							c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
+						}()
+					case *api.Message_TriggerAllMessage:
+						go c.processUpdateAll()
+					case *api.Message_RepeatRegistrationMessage:
+						go c.processRepeatRegister(ctx)
+					default:
+						c.logger.Info("Received unhandled message", zap.Reflect("message", in))
+					}
+					c.logger.Debug("message processing finished")
 				}
 			}
 		}
