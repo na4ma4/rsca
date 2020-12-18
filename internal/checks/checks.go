@@ -57,6 +57,29 @@ func GetCheckFromViper(cfg config.Conf, logger *zap.Logger, name, hostName strin
 		Period:   cfg.GetDuration(fmt.Sprintf("check.%s.period", name)),
 		Command:  cfg.GetString(fmt.Sprintf("check.%s.command", name)),
 		Hostname: hostName,
+		Timeout:  cfg.GetDuration(fmt.Sprintf("check.%s.timeout", name)),
+		Workdir:  cfg.GetString(fmt.Sprintf("check.%s.workdir", name)),
+	}
+
+	if check.Timeout == 0 {
+		check.Timeout = cfg.GetDuration("default.timeout")
+	}
+
+	if check.Period == 0 {
+		check.Period = cfg.GetDuration("default.period")
+	}
+
+	if check.Name == "" {
+		switch strings.ToLower(cfg.GetString("default.name-format")) {
+		case "lowercase", "lower", "lc":
+			check.Name = strings.ToUpper(name)
+		case "titlecase", "title", "tc":
+			check.Name = strings.ToTitle(name)
+		case "uppercase", "upper", "uc":
+			fallthrough
+		default:
+			check.Name = strings.ToUpper(name)
+		}
 	}
 
 	switch cfg.GetString(fmt.Sprintf("check.%s.type", name)) {
