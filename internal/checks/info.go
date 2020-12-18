@@ -1,17 +1,21 @@
 package checks
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
+	"github.com/kballard/go-shellquote"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
@@ -53,6 +57,54 @@ func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int, cmdErr error) {
 	}
 
 	return
+}
+
+// splitCmd uses `shellquote` on non windows platforms.
+func (i *Info) splitCmd() (o []string) {
+	o, err := shellquote.Split(i.Command)
+	if err != nil {
+		o = strings.Split(i.Command, " ")
+	}
+
+	return
+}
+
+// wrapCmd [!windows] uses syscall.Kill to kill process group for check.
+func (i *Info) wrapCmd(
+	ctx context.Context,
+	args []string,
+) (exitCode int, ob *bytes.Buffer, oberr *bytes.Buffer, err error) {
+	wg := sync.WaitGroup{}
+	ob = bytes.NewBuffer(nil)
+	oberr = bytes.NewBuffer(nil)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...) //nolint: gosec
+	cmd.Dir = i.Workdir
+
+	if pb, err := cmd.StdoutPipe(); err == nil {
+		i.ioCopyWaitGroup(&wg, ob, pb)
+	}
+
+	if pberr, err := cmd.StderrPipe(); err == nil {
+		i.ioCopyWaitGroup(&wg, oberr, pberr)
+	}
+
+	exitCode, err = i.runCmd(cmd)
+
+	wg.Wait()
+
+	return exitCode, ob, oberr, err
+}
+
+// ioCopyWaitGroup adds one worker to a waitgroup and runs an io.Copy until completed,
+// once completed it will call waitgroup.Done().
+func (i *Info) ioCopyWaitGroup(wg *sync.WaitGroup, dst io.Writer, src io.Reader) {
+	wg.Add(1)
+
+	go func() {
+		_, _ = io.Copy(dst, src)
+
+		wg.Done()
+	}()
 }
 
 // Run executes a check and returns an api.EventMessage with the details.
