@@ -3,11 +3,8 @@ syntax = "proto3";
 package rsca.api;
 option go_package = "github.com/na4ma4/rsca/api";
 
-// import "google/protobuf/timestamp.proto";
-// import "google/api/annotations.proto";
 import "github.com/na4ma4/rsca/api/common.proto";
 
 service RSCA {
     rpc Pipe(stream Message) returns (stream Message);
 }
-

@@ -63,5 +63,4 @@ var _ = Describe("Check Loading", func() {
 			Timeout:  12 * time.Second,
 		}))
 	})
-
 })

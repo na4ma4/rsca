@@ -131,5 +131,4 @@ var _ = Describe("Check Runner", func() {
 		Expect(respEvent.GetStatus()).To(Equal(api.Status_OK))
 		Expect(respEvent.GetOutput()).To(Equal("Test All OK"))
 	}, 2)
-
 })
