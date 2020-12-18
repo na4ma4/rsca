@@ -19,13 +19,14 @@ func ConfigInit() {
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("general.jitter", "10s")
-	viper.SetDefault("general.timeout", "3s")
 	viper.SetDefault("general.retry", true)
 	viper.SetDefault("general.max-retries", 3)
 	viper.SetDefault("general.check-tick", "9s")
 	viper.SetDefault("general.tags", []string{})
 
-	viper.RegisterAlias("command.timeout", "general.timeout")
+	viper.SetDefault("default.period", "120s")
+	viper.SetDefault("default.timeout", "3s")
+	viper.SetDefault("default.name-format", "uppercase")
 
 	viper.SetDefault("nagios.command-file", "/tmp/nagios.cmd")
 

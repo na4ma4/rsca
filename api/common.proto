@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package acre.api;
+package rsca.api;
 option go_package = "github.com/na4ma4/rsca/api";
 
 import "google/protobuf/timestamp.proto";
@@ -104,6 +104,7 @@ message EventMessage {
     string check = 3;
     Status status = 4;
     string output = 5;
+    string output_error = 10;
     string perfdata = 6;
     google.protobuf.Timestamp request_timestamp = 7;
     int32 retries = 8;

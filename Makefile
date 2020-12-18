@@ -51,6 +51,20 @@ install: $(REQ) $(_SRC) | $(USE)
 
 
 ######################
+# Custom
+######################
+
+artifacts/protobuf/go.proto_paths.jq: artifacts/protobuf/go.proto_paths
+	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
+	jq -Rn 'inputs | select(.)' < "$(^)" > "$(@)"
+
+.vscode/settings.json: artifacts/protobuf/go.proto_paths.jq
+	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
+	$(if $(shell cat "$(@)" 2>/dev/null),cat "$(@)",echo '{}') | jq --slurpfile po "$(<)" '.protoc.options=$$po' > "$(@).tmp"
+	mv "$(@).tmp" "$(@)"
+
+
+######################
 # Test
 ######################
 
@@ -119,20 +133,25 @@ $(GOLINT):
 GOLANGCILINT := artifacts/bin/golangci-lint
 $(GOLANGCILINT):
 	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(MF_PROJECT_ROOT)/$(@D)" v1.32.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(MF_PROJECT_ROOT)/$(@D)" v1.33.0
 
 STATICCHECK := artifacts/bin/staticcheck
 $(STATICCHECK):
 	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
 	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) honnef.co/go/tools/cmd/staticcheck
 
+artifacts/cover/staticheck/unused-graph.txt: $(STATICCHECK) $(GO_SOURCE_FILES)
+	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
+	$(STATICCHECK) -debug.unused-graph "$(@)" ./...
+	# cat "$(@)"
+
 .PHONY: lint
-lint:: $(GOLINT) $(MISSPELL) $(GOLANGCILINT) $(STATICCHECK)
+lint:: $(GOLINT) $(MISSPELL) $(GOLANGCILINT) $(STATICCHECK) artifacts/cover/staticheck/unused-graph.txt
 	go vet ./...
 	$(GOLINT) -set_exit_status ./...
 	$(MISSPELL) -w -error -locale UK ./...
-	$(GOLANGCILINT) run --enable-all --disable 'exhaustivestruct' ./...
-	$(STATICCHECK) -fail "all,-U1001" -unused.whole-program ./...
+	$(GOLANGCILINT) run --enable-all --disable 'exhaustivestruct,paralleltest' ./...
+	$(STATICCHECK) -fail "all,-U1001" ./...
 
 ci:: lint
 

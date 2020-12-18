@@ -1,6 +1,10 @@
 [general]
 tags=["darwin"]
 
+[default]
+timeout="5s"
+name-format="uppercase"
+
 [nagios]
 command-file="test/test.cmd"
 
@@ -45,3 +49,9 @@ name="UNKNOWN"
 type="service"
 period="5s"
 command="test/check_unknown.sh"
+
+[check.SERVICE_TIMEOUT]
+name="TIMEOUT"
+type="service"
+period="5s"
+command="test/check_sleep.sh"
