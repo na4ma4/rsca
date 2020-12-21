@@ -32,13 +32,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
   - id: rsca
     main: ./cmd/rsca
     binary: rsca
@@ -46,13 +46,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
   - id: rscad
     main: ./cmd/rscad
     binary: rscad
@@ -60,13 +60,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
 
 archives:
   # - replacements:
