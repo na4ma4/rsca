@@ -102,7 +102,16 @@ nfpms:
     formats:
       - apk
       - deb
-    bindir: /usr/local/bin
+    bindir: /usr/sbin
+    files:
+      "systemd/client/rsca.service": "/lib/systemd/system/rsca.service"
+    overrides:
+      deb:
+        scripts:
+          preinstall: "nfpms/client/pre-install.sh"
+          postinstall: "nfpms/client/post-install.sh"
+          preremove: "nfpms/client/pre-remove.sh"
+          postremove: "nfpms/client/post-remove.sh"
   -
     id: rscad
     package_name: rscad
@@ -115,6 +124,15 @@ nfpms:
     formats:
       - apk
       - deb
-    bindir: /usr/local/bin
+    bindir: /usr/sbin
+    files:
+      "systemd/server/rscad.service": "/lib/systemd/system/rscad.service"
+    overrides:
+      deb:
+        scripts:
+          preinstall: "nfpms/server/pre-install.sh"
+          postinstall: "nfpms/server/post-install.sh"
+          preremove: "nfpms/server/pre-remove.sh"
+          postremove: "nfpms/server/post-remove.sh"
 
 
