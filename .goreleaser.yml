@@ -96,10 +96,6 @@ nfpms:
     file_name_template: "rsca_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     builds:
       - rsca
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
     homepage: https://github.com/na4ma4/rsca
     maintainer: na4ma4 <na4ma4@gmail.com>
     description: Remote service check agent (agent)
@@ -113,10 +109,6 @@ nfpms:
     file_name_template: "rscad_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     builds:
       - rscad
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
     homepage: https://github.com/na4ma4/rsca
     maintainer: na4ma4 <na4ma4@gmail.com>
     description: Remote service check agent (server)
