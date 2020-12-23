@@ -14,6 +14,10 @@ message TriggerAllResponse {
     repeated string names = 1;
 }
 
+message TriggerInfoResponse {
+    repeated string names = 1;
+}
+
 message Envelope {
     Member sender = 10;
     Members recipient = 11;
@@ -42,9 +46,40 @@ message Member {
     google.protobuf.Timestamp last_seen = 100;
     google.protobuf.Duration ping_latency = 102;
 
+    InfoStat info_stat = 200;
+    google.protobuf.Timestamp system_start = 201;
+    google.protobuf.Timestamp process_start = 202;
+
+
     // Only used in rendering host lists, not transferred over the wire.
     string last_seen_ago = 1001;
     string latency = 1003;
+}
+
+message InfoStat {
+    google.protobuf.Timestamp timestamp = 1;
+    string hostname = 21;
+    uint64 uptime = 22;
+    uint64 boot_time = 23;
+    // number of processes
+    uint64 procs = 24;
+    // ex: freebsd, linux
+    string os = 25;
+    // ex: ubuntu, linuxmint
+    string platform = 26;
+    // ex: debian, rhel
+    string platform_family = 27;
+    // version of the complete OS
+    string platform_version = 28;
+    // version of the OS kernel (if available)
+    string kernel_version = 29;
+    // native cpu architecture queried at runtime, as returned by `uname -m` or empty string in case of error
+    string kernel_arch = 30;
+    string virt_system = 31;
+    // guest or host
+    string virt_role = 32;
+    // ex: uuid
+    string host_id = 33;
 }
 
 // message Recipient {
@@ -62,7 +97,9 @@ message Message {
         PingMessage ping_message = 101;
         PongMessage pong_message = 102;
         EventMessage event_message = 103;
-        UpdateAllMessage update_all_message = 104;
+        TriggerAllMessage trigger_all_message = 104;
+        RepeatRegistrationMessage repeat_registration_message = 105;
+        MemberUpdateMessage member_update_message = 106;
     }
 }
 
@@ -82,8 +119,16 @@ message PongMessage {
     google.protobuf.Timestamp ts = 4;
 }
 
-message UpdateAllMessage {
+message TriggerAllMessage {
     string id = 1;
+}
+
+message RepeatRegistrationMessage {
+    string id = 1;
+}
+
+message MemberUpdateMessage {
+    Member member = 1;
 }
 
 enum Status {

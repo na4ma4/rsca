@@ -32,13 +32,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
   - id: rsca
     main: ./cmd/rsca
     binary: rsca
@@ -46,13 +46,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
   - id: rscad
     main: ./cmd/rscad
     binary: rscad
@@ -60,13 +60,13 @@ builds:
       - linux_amd64
       - windows_amd64
       - darwin_amd64
-    flags:
-      - -v
-    ldflags:
-      - -s -w
-      - -X main.version={{.Version}}
-      - -X main.gitHash={{.ShortCommit}}
-      - -X main.buildDate={{.CommitDate}}
+    # flags:
+    #   - -v
+    # ldflags:
+    #   - -s -w
+    #   - -X main.version={{.Version}}
+    #   - -X main.gitHash={{.ShortCommit}}
+    #   - -X main.buildDate={{.CommitDate}}
 
 archives:
   # - replacements:
@@ -88,3 +88,33 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+nfpms:
+  -
+    id: rsca
+    package_name: rsca
+    file_name_template: "rsca_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - rsca
+    homepage: https://github.com/na4ma4/rsca
+    maintainer: na4ma4 <na4ma4@users.noreply.github.com>
+    description: Remote service check agent (agent)
+    formats:
+      - apk
+      - deb
+    bindir: /usr/local/bin
+  -
+    id: rscad
+    package_name: rscad
+    file_name_template: "rscad_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - rscad
+    homepage: https://github.com/na4ma4/rsca
+    maintainer: na4ma4 <na4ma4@users.noreply.github.com>
+    description: Remote service check agent (server)
+    formats:
+      - apk
+      - deb
+    bindir: /usr/local/bin
+
+

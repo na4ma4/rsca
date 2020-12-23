@@ -106,11 +106,15 @@ func NewServer(logger *zap.Logger, hostName string) *Server {
 	}
 }
 
-// TriggerAll triggers all the services on a matching host.
-func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAllResponse, error) {
+// TriggerInfo triggers an information update from the host (repeat-registration).
+func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerInfoResponse, error) {
 	msg := &api.Message{
 		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
-		Message:  &api.Message_UpdateAllMessage{UpdateAllMessage: &api.UpdateAllMessage{Id: uuid.New().String()}},
+		Message: &api.Message_RepeatRegistrationMessage{
+			RepeatRegistrationMessage: &api.RepeatRegistrationMessage{
+				Id: uuid.New().String(),
+			},
+		},
 	}
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
@@ -118,16 +122,34 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAl
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	streamIDs := s.streamIDsFromRecipient(m)
-	hostNames := []string{}
+	return &api.TriggerInfoResponse{
+		Names: s.streamIDsToHostnames(s.streamIDsFromRecipient(m)),
+	}, nil
+}
 
+// TriggerAll triggers all the services on a matching host.
+func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAllResponse, error) {
+	msg := &api.Message{
+		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
+		Message:  &api.Message_TriggerAllMessage{TriggerAllMessage: &api.TriggerAllMessage{Id: uuid.New().String()}},
+	}
+	if err := s.Send(msg); err != nil {
+		s.logger.Error("send returned error", zap.Error(err))
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &api.TriggerAllResponse{
+		Names: s.streamIDsToHostnames(s.streamIDsFromRecipient(m)),
+	}, nil
+}
+
+func (s *Server) streamIDsToHostnames(streamIDs []string) (hostNames []string) {
 	for _, streamID := range streamIDs {
 		hostNames = append(hostNames, s.streamIDToHostname(streamID))
 	}
 
-	return &api.TriggerAllResponse{
-		Names: hostNames,
-	}, nil
+	return
 }
 
 // ListHosts returns a list of hosts currently registered with the server.
@@ -188,6 +210,8 @@ func (s *Server) processPipe(streamID string, stream api.RSCA_PipeServer) error 
 			s.processEventMessage(in, msg)
 		case *api.Message_RegisterMessage:
 			s.processRegisterMessage(streamID, in, msg)
+		case *api.Message_MemberUpdateMessage:
+			s.processMemberUpdateMessage(streamID, in, msg)
 		case *api.Message_PingMessage:
 			s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
 			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PingMessage").Inc()
@@ -255,11 +279,31 @@ func (s *Server) processRegisterMessage(
 		zap.Strings("rsca.client.capabilities", msg.RegisterMessage.Member.GetCapability()),
 		zap.Strings("rsca.client.services", msg.RegisterMessage.Member.GetService()),
 	)
+	s.updateMember(streamID, msg.RegisterMessage.Member)
+}
+
+func (s *Server) processMemberUpdateMessage(
+	streamID string,
+	in *api.Message,
+	msg *api.Message_MemberUpdateMessage,
+) {
+	s.metric.Received.WithLabelValues("_all", "MemberUpdateMessage").Inc()
+	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "MemberUpdateMessage").Inc()
+	s.logger.Debug("client updated",
+		zap.String("rsca.client.name", msg.MemberUpdateMessage.Member.GetName()),
+		zap.Strings("rsca.client.tags", msg.MemberUpdateMessage.Member.GetTag()),
+		zap.Strings("rsca.client.capabilities", msg.MemberUpdateMessage.Member.GetCapability()),
+		zap.Strings("rsca.client.services", msg.MemberUpdateMessage.Member.GetService()),
+	)
+	s.updateMember(streamID, msg.MemberUpdateMessage.Member)
+}
+
+func (s *Server) updateMember(streamID string, m *api.Member) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if _, ok := s.streams[streamID]; ok {
-		s.streams[streamID].Record = msg.RegisterMessage.Member
+		s.streams[streamID].Record = m
 	}
 }
 

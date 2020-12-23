@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -30,7 +31,8 @@ var cmdHostList = &cobra.Command{
 // nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHostList.PersistentFlags().StringP("format", "f",
-		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{.Service}}",
+		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{time .SystemStart}}"+
+			"\t{{time .ProcessStart}}\t{{.Service}}",
 		"Output format (go template)",
 	)
 
@@ -120,24 +122,48 @@ func printHostList(tmpl *template.Template, hostList []*api.Member) {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
-	_ = tmpl.Execute(w, map[string]string{
-		"Id":          "ID",
-		"BuildDate":   "Build Date",
-		"Capability":  "Capabilities",
-		"GitHash":     "Git Hash",
-		"InternalId":  "Internal ID",
-		"LastSeen":    "Last Seen",
-		"LastSeenAgo": "Last Seen Ago",
-		"Latency":     "Latency",
-		"Name":        "Name",
-		"PingLatency": "Ping Latency",
-		"Service":     "Services",
-		"Tag":         "Tags",
-		"Version":     "Version",
-	})
+	if !strings.Contains(viper.GetString("host.list.format"), "json") {
+		if err := tmpl.Execute(w, map[string]interface{}{
+			"Id":           "ID",
+			"BuildDate":    "Build Date",
+			"Capability":   "Capabilities",
+			"GitHash":      "Git Hash",
+			"InternalId":   "Internal ID",
+			"LastSeen":     "Last Seen",
+			"LastSeenAgo":  "Last Seen Ago",
+			"Latency":      "Latency",
+			"Name":         "Name",
+			"PingLatency":  "Ping Latency",
+			"SystemStart":  "System Start",
+			"ProcessStart": "Process Start",
+			"InfoStat": map[string]string{
+				"Timestamp":       "Timestamp",
+				"Hostname":        "Host Name",
+				"Uptime":          "Uptime",
+				"BootTime":        "Boot Time",
+				"Procs":           "Procs",
+				"Os":              "OS",
+				"Platform":        "Platform",
+				"PlatformFamily":  "Platform Family",
+				"PlatformVersion": "Platform Version",
+				"KernelVersion":   "Kernel Version",
+				"KernelArch":      "Kernel Arch",
+				"VirtSystem":      "Virtual System",
+				"VirtRole":        "Virtual Role",
+				"HostId":          "Host ID",
+			},
+			"Service": "Services",
+			"Tag":     "Tags",
+			"Version": "Version",
+		}); err != nil {
+			log.Printf("error pparsing template: %s", err.Error())
+		}
+	}
 
 	for _, in := range hostList {
-		_ = tmpl.Execute(w, in)
+		if err := tmpl.Execute(w, in); err != nil {
+			log.Printf("error displaying host: %s", err.Error())
+		}
 	}
 
 	w.Flush()

@@ -23,6 +23,7 @@ func ConfigInit() {
 	viper.SetDefault("general.max-retries", 3)
 	viper.SetDefault("general.check-tick", "9s")
 	viper.SetDefault("general.tags", []string{})
+	viper.SetDefault("general.registration-interval", "180s")
 
 	viper.SetDefault("default.period", "120s")
 	viper.SetDefault("default.timeout", "3s")
