@@ -97,7 +97,7 @@ nfpms:
     builds:
       - rsca
     homepage: https://github.com/na4ma4/rsca
-    maintainer: na4ma4 <na4ma4@gmail.com>
+    maintainer: na4ma4 <na4ma4@users.noreply.github.com>
     description: Remote service check agent (agent)
     formats:
       - apk
@@ -110,7 +110,7 @@ nfpms:
     builds:
       - rscad
     homepage: https://github.com/na4ma4/rsca
-    maintainer: na4ma4 <na4ma4@gmail.com>
+    maintainer: na4ma4 <na4ma4@users.noreply.github.com>
     description: Remote service check agent (server)
     formats:
       - apk
