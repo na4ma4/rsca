@@ -41,6 +41,10 @@ func init() {
 	rootCmd.PersistentFlags().Bool("watchdog", false, "Enable systemd watchdog functionality")
 	_ = viper.BindPFlag("watchdog.enabled", rootCmd.PersistentFlags().Lookup("watchdog"))
 	_ = viper.BindEnv("watchdog.enabled", "WATCHDOG")
+
+	rootCmd.PersistentFlags().String("config-path", "/etc/nagios/rsca.d", "Configuration path to use for config files")
+	_ = viper.BindPFlag("config.path", rootCmd.PersistentFlags().Lookup("config-path"))
+	_ = viper.BindEnv("config.path", "CONFIG_PATH")
 }
 
 func main() {
@@ -48,7 +52,7 @@ func main() {
 }
 
 func mainCommand(cmd *cobra.Command, args []string) {
-	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
+	cfg := config.NewViperConfDFromViper(viper.GetViper(), "/etc/nagios/rsca.d/", "rsca")
 
 	logger, _ := cfg.ZapConfig().Build()
 	defer logger.Sync() //nolint: errcheck
