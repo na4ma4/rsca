@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.10.4
 	github.com/prometheus/client_golang v1.9.0
 	github.com/shirou/gopsutil v3.20.12+incompatible
-	github.com/shirou/gopsutil/v3 v3.20.12
+	github.com/shirou/gopsutil/v3 v3.21.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1
 	go.uber.org/multierr v1.6.0
