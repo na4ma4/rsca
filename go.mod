@@ -8,7 +8,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/na4ma4/config v0.5.0
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
-	github.com/onsi/ginkgo v1.14.2
+	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/prometheus/client_golang v1.9.0
 	github.com/shirou/gopsutil v3.21.1+incompatible
