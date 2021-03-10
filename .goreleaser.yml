@@ -65,7 +65,7 @@ nfpms:
       - deb
     bindir: /usr/sbin
     contents:
-      - src: "systemd/server/rsca.service"
+      - src: "systemd/client/rsca.service"
         dst: "/lib/systemd/system/rsca.service"
     overrides:
       deb:
