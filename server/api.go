@@ -190,6 +190,7 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 }
 
 // processPipe is the main message handler.
+//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
 func (s *Server) processPipe(streamID string, stream api.RSCA_PipeServer) error {
 	for {
 		in, err := stream.Recv()
@@ -367,6 +368,7 @@ func (s *Server) compareSlices(s1, s2 []string) bool {
 }
 
 // streamIDsFromRecipient processes a recipient (*api.Members) and returns a list of streamIDs.
+//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
 func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 	s.lock.Lock()
 	defer s.lock.Unlock()

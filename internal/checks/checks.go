@@ -2,10 +2,7 @@ package checks
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/na4ma4/config"
@@ -25,6 +22,7 @@ func (c Checks) NextRun(t time.Time) {
 }
 
 // GetChecksFromViper gets all the checks from the viper.Viper config.
+//nolint:wastedassign // the i++ is wasted, but it's the optimal pattern for this conversion.
 func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, hostName string) Checks {
 	checkListMap := make(map[string]bool)
 
@@ -37,8 +35,6 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 
 	checkList := make(Checks, len(checkListMap))
 	i := 0
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	for v := range checkListMap {
 		checkList[i] = GetCheckFromViper(cfg, logger, v, hostName)
@@ -51,6 +47,7 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 }
 
 // GetCheckFromViper returns a check with the specified name from the config file.
+//nolint:cyclop // I'd rather keep all this code together than split it out unnecessarily.
 func GetCheckFromViper(cfg config.Conf, logger *zap.Logger, name, hostName string) *Info {
 	check := &Info{
 		Name:     cfg.GetString(fmt.Sprintf("check.%s.name", name)),

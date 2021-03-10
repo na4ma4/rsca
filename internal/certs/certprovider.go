@@ -74,6 +74,7 @@ type FileCertificateProvider struct {
 
 // NewFileCertificateProvider returns a new FileCertificateProvider using certs from the specified directory
 // optionally also can be used for gRPC clients by setting server to false.
+//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
 func NewFileCertificateProvider(
 	certDir string,
 	providerType CertificateProviderType,

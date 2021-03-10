@@ -35,14 +35,16 @@ type Info struct {
 }
 
 // runCmd runs a supplied command and returns the exitcode.
+//nolint:nestif // it might be "deeply nested", but it's readable and confines this code to this function.
 func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int, cmdErr error) {
 	cmdErr = cmd.Run()
 	if cmdErr != nil {
 		// try to get the exit code
 		var exitError *exec.ExitError
 		if errors.As(cmdErr, &exitError) {
-			ws := exitError.Sys().(syscall.WaitStatus)
-			exitCode = ws.ExitStatus()
+			if ws, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				exitCode = ws.ExitStatus()
+			}
 		} else {
 			// This will happen (in OSX) if `name` is not available in $PATH, in this situation,
 			// exit code could not be get, and stderr will be empty string very likely, so we use
@@ -50,9 +52,8 @@ func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int, cmdErr error) {
 			exitCode = 3
 			cmdErr = fmt.Errorf("check failed to run: %w", cmdErr)
 		}
-	} else {
+	} else if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 		// success, exitCode should be 0 if go is ok
-		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
 		exitCode = ws.ExitStatus()
 	}
 
