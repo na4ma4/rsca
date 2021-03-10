@@ -11,7 +11,7 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
-	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/v3/host"
 )
 
 // Message is a struct that wraps the information required for an api.RegisterMessage to be sent.
