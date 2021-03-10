@@ -34,6 +34,7 @@ var basicFunctions = template.FuncMap{
 	"tf":       stringTrueFalse,
 	"yn":       stringYesNo,
 	"t":        stringTab,
+	"age":      ageFormat,
 	"time":     timeFormat,
 	"date":     dateFormat,
 }
@@ -55,6 +56,23 @@ func padWithSpace(source string, prefix, suffix int) string {
 	}
 
 	return strings.Repeat(" ", prefix) + source + strings.Repeat(" ", suffix)
+}
+
+// ageFormat returns time in seconds ago.
+func ageFormat(source interface{}) string {
+	switch s := source.(type) {
+	case time.Time:
+		return fmt.Sprintf("%0.2f", time.Now().Sub(s).Seconds())
+		// return s.Format(time.RFC3339)
+	case timestamp.Timestamp:
+		return fmt.Sprintf("%0.2f", time.Now().Sub(s.AsTime()).Seconds())
+		// return s.AsTime().Format(time.RFC3339)
+	case *timestamp.Timestamp:
+		return fmt.Sprintf("%0.2f", time.Now().Sub(s.AsTime()).Seconds())
+		// return s.AsTime().Format(time.RFC3339)
+	default:
+		return fmt.Sprintf("%s", source)
+	}
 }
 
 // timeFormat returns time in RFC3339 format.

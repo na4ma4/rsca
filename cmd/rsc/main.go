@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
 
@@ -45,10 +46,39 @@ func grpcServer(server string) string {
 	return fmt.Sprintf("%s:%s", host, port)
 }
 
+func zapEncoderConfig() zapcore.EncoderConfig {
+	return zapcore.EncoderConfig{
+		// Keys can be anything except the empty string.
+		TimeKey:        "T",
+		LevelKey:       "L",
+		NameKey:        "N",
+		CallerKey:      zapcore.OmitKey,
+		FunctionKey:    zapcore.OmitKey,
+		MessageKey:     "M",
+		StacktraceKey:  "S",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+}
+
+func zapConfig() zap.Config {
+	return zap.Config{
+		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
+		Development:      false,
+		Encoding:         "console",
+		EncoderConfig:    zapEncoderConfig(),
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+}
+
 func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.ClientConn {
 	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("admin.server")))
 
-	logger.Debug("Connecting to API",
+	logger.Debug("connecting to API",
 		zap.String("bind", grpcServer(cfg.GetString("admin.server"))),
 		zap.String("dns-name", serverHostName),
 	)

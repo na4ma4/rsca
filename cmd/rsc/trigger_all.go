@@ -45,7 +45,7 @@ func init() {
 func triggerAllCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
-	logger, _ := cfg.ZapConfig().Build()
+	logger, _ := zapConfig().Build()
 	defer logger.Sync() //nolint: errcheck
 
 	ctx, cancel := context.WithCancel(context.Background())

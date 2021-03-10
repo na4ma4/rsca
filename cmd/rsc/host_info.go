@@ -18,27 +18,27 @@ import (
 )
 
 // nolint: gochecknoglobals // cobra uses globals in main
-var cmdHostList = &cobra.Command{
-	Use:   "ls",
-	Short: "List Hosts",
-	Run:   hostListCommand,
-	Args:  cobra.NoArgs,
+var cmdHostInfo = &cobra.Command{
+	Use:   "info <id|name> [id|name]",
+	Short: "Host Info",
+	Run:   hostInfoCommand,
+	Args:  cobra.MinimumNArgs(1),
 }
 
 // nolint:gochecknoinits // init is used in main for cobra
 func init() {
-	cmdHostList.PersistentFlags().StringP("format", "f",
+	cmdHostInfo.PersistentFlags().StringP("format", "f",
 		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{time .SystemStart}}"+
 			"\t{{time .ProcessStart}}\t{{.Service}}",
 		"Output format (go template)",
 	)
 
-	_ = viper.BindPFlag("host.list.format", cmdHostList.PersistentFlags().Lookup("format"))
+	_ = viper.BindPFlag("host.info.format", cmdHostInfo.PersistentFlags().Lookup("format"))
 
-	cmdHost.AddCommand(cmdHostList)
+	cmdHost.AddCommand(cmdHostInfo)
 }
 
-func hostListCommand(cmd *cobra.Command, args []string) {
+func hostInfoCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()
@@ -56,25 +56,25 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("unable to receive ListHosts stream from server", zap.Error(err))
 	}
 
-	if strings.Contains(viper.GetString("host.list.format"), "\\t") {
-		viper.Set("host.list.format", strings.ReplaceAll(viper.GetString("host.list.format"), "\\t", "\t"))
+	if strings.Contains(viper.GetString("host.info.format"), "\\t") {
+		viper.Set("host.info.format", strings.ReplaceAll(viper.GetString("host.info.format"), "\\t", "\t"))
 	}
 
-	if !strings.HasSuffix(viper.GetString("host.list.format"), "\n") {
-		viper.Set("host.list.format", fmt.Sprintf("%s\n", viper.GetString("host.list.format")))
+	if !strings.HasSuffix(viper.GetString("host.info.format"), "\n") {
+		viper.Set("host.info.format", fmt.Sprintf("%s\n", viper.GetString("host.info.format")))
 	}
 
-	tmpl, err := template.New("").Funcs(basicFunctions).Parse(viper.GetString("host.list.format"))
+	tmpl, err := template.New("").Funcs(basicFunctions).Parse(viper.GetString("host.info.format"))
 	if err != nil {
 		logger.Fatal("unable to load template engine", zap.Error(err))
 	}
 
-	hostList := scrapeHostList(logger, stream)
+	hostList := findHostInList(logger, args, stream)
 
 	printHostList(tmpl, hostList)
 }
 
-func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api.Member {
+func findHostInList(logger *zap.Logger, query []string, stream api.Admin_ListHostsClient) []*api.Member {
 	hostList := []*api.Member{}
 
 	for {
@@ -110,6 +110,10 @@ func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api
 		in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
 		in.Latency = in.PingLatency.AsDuration().String()
 
-		hostList = append(hostList, in)
+		for _, match := range query {
+			if strings.EqualFold(match, in.Id) || strings.EqualFold(match, in.Name) {
+				hostList = append(hostList, in)
+			}
+		}
 	}
 }
