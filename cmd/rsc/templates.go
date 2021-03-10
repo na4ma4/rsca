@@ -62,13 +62,13 @@ func padWithSpace(source string, prefix, suffix int) string {
 func ageFormat(source interface{}) string {
 	switch s := source.(type) {
 	case time.Time:
-		return fmt.Sprintf("%0.2f", time.Now().Sub(s).Seconds())
+		return fmt.Sprintf("%0.2f", time.Since(s).Seconds())
 		// return s.Format(time.RFC3339)
 	case timestamp.Timestamp:
-		return fmt.Sprintf("%0.2f", time.Now().Sub(s.AsTime()).Seconds())
+		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
 		// return s.AsTime().Format(time.RFC3339)
 	case *timestamp.Timestamp:
-		return fmt.Sprintf("%0.2f", time.Now().Sub(s.AsTime()).Seconds())
+		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
 		// return s.AsTime().Format(time.RFC3339)
 	default:
 		return fmt.Sprintf("%s", source)

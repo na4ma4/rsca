@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -32,8 +30,12 @@ func init() {
 			"\t{{time .ProcessStart}}\t{{.Service}}",
 		"Output format (go template)",
 	)
+	cmdHostInfo.PersistentFlags().BoolP("raw", "r", false,
+		"Raw output (no headers)",
+	)
 
 	_ = viper.BindPFlag("host.info.format", cmdHostInfo.PersistentFlags().Lookup("format"))
+	_ = viper.BindPFlag("host.info.raw", cmdHostInfo.PersistentFlags().Lookup("raw"))
 
 	cmdHost.AddCommand(cmdHostInfo)
 }
@@ -71,7 +73,27 @@ func hostInfoCommand(cmd *cobra.Command, args []string) {
 
 	hostList := findHostInList(logger, args, stream)
 
-	printHostList(tmpl, hostList)
+	printHostList(tmpl, viper.GetBool("host.info.raw"), hostList)
+}
+
+func isHostMatch(query string, in *api.Member) bool {
+	if strings.EqualFold(query, in.Id) || strings.EqualFold(query, in.Name) {
+		return true
+	}
+
+	if strings.HasSuffix(query, "*") || strings.HasSuffix(query, "%") {
+		if strings.HasPrefix(in.Name, query[:len(query)-1]) {
+			return true
+		}
+	}
+
+	if strings.HasPrefix(query, "*") || strings.HasPrefix(query, "%") {
+		if strings.HasSuffix(in.Name, query[1:]) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func findHostInList(logger *zap.Logger, query []string, stream api.Admin_ListHostsClient) []*api.Member {
@@ -89,29 +111,10 @@ func findHostInList(logger *zap.Logger, query []string, stream api.Admin_ListHos
 			return hostList
 		}
 
-		if in.Service == nil {
-			in.Service = []string{}
-		} else {
-			sort.Strings(in.Service)
-		}
-
-		if in.Capability == nil {
-			in.Capability = []string{}
-		} else {
-			sort.Strings(in.Capability)
-		}
-
-		if in.Tag == nil {
-			in.Tag = []string{}
-		} else {
-			sort.Strings(in.Tag)
-		}
-
-		in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
-		in.Latency = in.PingLatency.AsDuration().String()
+		fillInAPIMember(in)
 
 		for _, match := range query {
-			if strings.EqualFold(match, in.Id) || strings.EqualFold(match, in.Name) {
+			if isHostMatch(match, in) {
 				hostList = append(hostList, in)
 			}
 		}

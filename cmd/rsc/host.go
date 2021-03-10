@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 	"text/template"
+	"time"
 
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/cobra"
@@ -24,13 +25,36 @@ func init() {
 	rootCmd.AddCommand(cmdHost)
 }
 
-func printHostList(tmpl *template.Template, hostList []*api.Member) {
+func fillInAPIMember(in *api.Member) {
+	if in.Service == nil {
+		in.Service = []string{}
+	} else {
+		sort.Strings(in.Service)
+	}
+
+	if in.Capability == nil {
+		in.Capability = []string{}
+	} else {
+		sort.Strings(in.Capability)
+	}
+
+	if in.Tag == nil {
+		in.Tag = []string{}
+	} else {
+		sort.Strings(in.Tag)
+	}
+
+	in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
+	in.Latency = in.PingLatency.AsDuration().String()
+}
+
+func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*api.Member) {
 	sort.Slice(hostList, func(i, j int) bool { return hostList[i].Name < hostList[j].Name })
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	// if !strings.Contains(viper.GetString("host.list.format"), "json") {
-	if !strings.Contains(tmpl.Root.String(), "json") {
+	if !strings.Contains(tmpl.Root.String(), "json") && !forceHeaderAbsent {
 		if err := tmpl.Execute(w, map[string]interface{}{
 			"Id":           "ID",
 			"BuildDate":    "Build Date",

@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -71,7 +69,7 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 
 	hostList := scrapeHostList(logger, stream)
 
-	printHostList(tmpl, hostList)
+	printHostList(tmpl, false, hostList)
 }
 
 func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api.Member {
@@ -89,26 +87,7 @@ func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api
 			return hostList
 		}
 
-		if in.Service == nil {
-			in.Service = []string{}
-		} else {
-			sort.Strings(in.Service)
-		}
-
-		if in.Capability == nil {
-			in.Capability = []string{}
-		} else {
-			sort.Strings(in.Capability)
-		}
-
-		if in.Tag == nil {
-			in.Tag = []string{}
-		} else {
-			sort.Strings(in.Tag)
-		}
-
-		in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
-		in.Latency = in.PingLatency.AsDuration().String()
+		fillInAPIMember(in)
 
 		hostList = append(hostList, in)
 	}
