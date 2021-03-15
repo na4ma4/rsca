@@ -1,6 +1,7 @@
 [Unit]
 Description=RSCA Monitoring Command Client
 BindTo=network.target
+StartLimitIntervalSec=0
 
 [Install]
 WantedBy=multi-user.target
@@ -11,4 +12,5 @@ Type=simple
 User=root
 Group=root
 Restart=always
+RestartSec=11
 WatchdogSec=120

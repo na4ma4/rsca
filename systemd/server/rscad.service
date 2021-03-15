@@ -1,6 +1,7 @@
 [Unit]
 Description=RSCA Monitoring Command Acceptor
 BindTo=network.target
+StartLimitIntervalSec=0
 
 [Install]
 WantedBy=multi-user.target
@@ -11,4 +12,5 @@ Type=simple
 User=nagios
 Group=nagios
 Restart=always
+RestartSec=3
 WatchdogSec=90
