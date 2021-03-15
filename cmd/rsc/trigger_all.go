@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/na4ma4/config"
@@ -42,6 +43,8 @@ func init() {
 	_ = viper.BindPFlag("trigger.all.capabilities", cmdTriggerAll.PersistentFlags().Lookup("capabilities"))
 }
 
+var errTriggerFailed = errors.New("trigger failed")
+
 func triggerAllCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
@@ -64,26 +67,30 @@ func triggerAllCommand(cmd *cobra.Command, args []string) {
 		ms.Name = args
 	}
 
-	if cfg.GetBool("trigger.all.info") {
+	if cfg.GetBool("trigger.all.info") { //nolint:nestif // removing nesting harms readability.
 		r, err := cc.TriggerInfo(ctx, ms)
 		if err != nil {
 			logger.Fatal("unable to trigger all services", zap.Error(err))
 		}
 
-		triggerAllCommandInfo(r)
+		if err := triggerAllCommandInfo(r); err == nil {
+			return
+		}
 	} else {
 		r, err := cc.TriggerAll(ctx, ms)
 		if err != nil {
 			logger.Fatal("unable to trigger all services", zap.Error(err))
 		}
 
-		triggerAllCommandServices(r)
+		if err := triggerAllCommandServices(r); err == nil {
+			return
+		}
 	}
 
 	fmt.Println("Trigger message failed")
 }
 
-func triggerAllCommandInfo(r *api.TriggerInfoResponse) {
+func triggerAllCommandInfo(r *api.TriggerInfoResponse) error {
 	if r != nil {
 		fmt.Printf("Trigger message sent to %d hosts\n", len(r.GetNames()))
 
@@ -91,11 +98,13 @@ func triggerAllCommandInfo(r *api.TriggerInfoResponse) {
 			fmt.Println(h)
 		}
 
-		return
+		return nil
 	}
+
+	return errTriggerFailed
 }
 
-func triggerAllCommandServices(r *api.TriggerAllResponse) {
+func triggerAllCommandServices(r *api.TriggerAllResponse) error {
 	if r != nil {
 		fmt.Printf("Trigger message sent to %d hosts\n", len(r.GetNames()))
 
@@ -103,6 +112,8 @@ func triggerAllCommandServices(r *api.TriggerAllResponse) {
 			fmt.Println(h)
 		}
 
-		return
+		return nil
 	}
+
+	return errTriggerFailed
 }
