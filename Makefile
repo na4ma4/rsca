@@ -24,6 +24,15 @@ GENERATED_FILES += test/test.cmd
 -include .makefiles/Makefile
 -include .makefiles/pkg/protobuf/v1/Makefile
 -include .makefiles/pkg/go/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-golangci-lint/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-golint/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-misspell/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-staticcheck/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-cfssl/v1/Makefile
+-include .makefiles/ext/na4ma4/pkg/lib-goreleaser/v1/Makefile
+
+.makefiles/ext/na4ma4/%: .makefiles/Makefile
+	@curl -sfL https://raw.githubusercontent.com/na4ma4/makefiles-ext/main/v1/install | bash /dev/stdin "$@"
 
 .makefiles/%:
 	@curl -sfL https://makefiles.dev/v1 | bash /dev/stdin "$@"
@@ -74,102 +83,8 @@ test/test.cmd:
 	ln -s /dev/null "$(@)"
 
 
-# .PHONY: test-feed-server
-# test-feed-server: test/feed/Dockerfile test/feed/gotime.xml
-# 	-@docker stop archpod-test-server
-# 	docker build -t archpod-test-server:latest "$(<D)"
-# 	docker run --rm -d --name "archpod-test-server" -p 8018:80/tcp archpod-test-server:latest
-
-
-######################
-# CFSSL
-######################
-
-CFSSL := artifacts/bin/cfssl
-$(CFSSL):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) github.com/cloudflare/cfssl/cmd/cfssl
-
-CFSSLJSON := artifacts/bin/cfssljson
-$(CFSSLJSON):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) github.com/cloudflare/cfssl/cmd/cfssljson
-
-.PHONY: cfssl
-cfssl: artifacts/certs/server.pem artifacts/certs/client.pem
-
-artifacts/certs/ca-config.json: test/ca-config.json
-	-@mkdir -p "$(@D)"
-	cp "$(<)" "$(@)"
-
-artifacts/certs/ca.pem: $(CFSSL) $(CFSSLJSON) artifacts/certs/ca-config.json test/ca-csr.json
-	-@mkdir -p "$(@D)"
-	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="ca" test/ca-csr.json | $(CFSSLJSON) -bare artifacts/certs/ca -
-	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="ca" -csr=artifacts/certs/ca.csr test/ca-csr.json | $(CFSSLJSON) -bare artifacts/certs/ca
-
-artifacts/certs/cert.pem: test/admin.json $(CFSSL) $(CFSSLJSON) artifacts/certs/ca.pem
-	-@mkdir -p "$(@D)"
-	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="client" "$(<)" | $(CFSSLJSON) -bare artifacts/certs/cert -
-	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="client" artifacts/certs/cert.csr | $(CFSSLJSON) -bare artifacts/certs/cert
-
-artifacts/certs/key.pem: artifacts/certs/cert.pem
-	-@mkdir -p "$(@D)"
-	cp artifacts/certs/cert-key.pem "$(@)"
-
-artifacts/certs/server.pem: test/host.json $(CFSSL) $(CFSSLJSON) artifacts/certs/ca.pem
-	-@mkdir -p "$(@D)"
-	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="server" "$(<)" | $(CFSSLJSON) -bare artifacts/certs/server -
-	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="server" artifacts/certs/server.csr | $(CFSSLJSON) -bare artifacts/certs/server
-
-artifacts/certs/client.pem: test/client.json $(CFSSL) $(CFSSLJSON) artifacts/certs/ca.pem
-	-@mkdir -p "$(@D)"
-	$(CFSSL) gencert -initca -config="artifacts/certs/ca-config.json" -profile="client" "$(<)" | $(CFSSLJSON) -bare artifacts/certs/client -
-	$(CFSSL) sign -ca="artifacts/certs/ca.pem" -ca-key="artifacts/certs/ca-key.pem" -config="artifacts/certs/ca-config.json" -profile="client" artifacts/certs/client.csr | $(CFSSLJSON) -bare artifacts/certs/client
-
-
 ######################
 # Linting
 ######################
 
-MISSPELL := artifacts/bin/misspell
-$(MISSPELL):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) github.com/client9/misspell/cmd/misspell
-
-GOLINT := artifacts/bin/golint
-$(GOLINT):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) golang.org/x/lint/golint
-
-GOLANGCILINT := artifacts/bin/golangci-lint
-$(GOLANGCILINT):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(MF_PROJECT_ROOT)/$(@D)" v1.38.0
-
-STATICCHECK := artifacts/bin/staticcheck
-$(STATICCHECK):
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	GOBIN="$(MF_PROJECT_ROOT)/$(@D)" go get $(_MODFILEARG) honnef.co/go/tools/cmd/staticcheck
-
-artifacts/cover/staticheck/unused-graph.txt: $(STATICCHECK) $(GO_SOURCE_FILES)
-	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
-	$(STATICCHECK) -debug.unused-graph "$(@)" ./...
-	# cat "$(@)"
-
-.PHONY: lint
-lint:: $(GOLINT) $(MISSPELL) $(GOLANGCILINT) $(STATICCHECK) artifacts/cover/staticheck/unused-graph.txt
-	go vet ./...
-	$(GOLINT) -set_exit_status ./...
-	$(MISSPELL) -w -error -locale UK ./...
-	$(GOLANGCILINT) run --enable-all --disable 'exhaustivestruct,paralleltest' ./...
-	$(STATICCHECK) -fail "all,-U1001" ./...
-
 ci:: lint
-
-
-######################
-# Preload Tools
-######################
-
-.PHONY: tools
-tools: $(MISSPELL) $(GOLINT) $(GOLANGCILINT) $(STATICCHECK) $(CFSSL) $(CFSSLJSON)
