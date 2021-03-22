@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/shirou/gopsutil/v3/host"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // InfoWithContext calls shirou/gopsutil InfoWithContext and returns a native InfoStat for protobuf.
@@ -27,10 +27,7 @@ func InfoWithContext(ctx context.Context, ts time.Time) (o *InfoStat, err error)
 			VirtSystem:      is.VirtualizationSystem,
 			VirtRole:        is.VirtualizationRole,
 			HostId:          is.HostID,
-		}
-
-		if tp, err := ptypes.TimestampProto(ts); err == nil {
-			o.Timestamp = tp
+			Timestamp:       timestamppb.New(ts),
 		}
 
 		return o, nil

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -20,6 +19,8 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Server is a api.RSCAServer for co-ordinating streams from clients.
@@ -236,12 +237,7 @@ func (s *Server) updateLastSeen(streamID string, t time.Time) {
 
 	if v, ok := s.streams[streamID]; ok {
 		if v.Record != nil {
-			ts, err := ptypes.TimestampProto(t)
-			if err != nil {
-				return
-			}
-
-			v.Record.LastSeen = ts
+			v.Record.LastSeen = timestamppb.New(t)
 		}
 	}
 }
@@ -340,7 +336,7 @@ func (s *Server) setPingLatency(streamID string, td time.Duration) {
 
 	if v, ok := s.streams[streamID]; ok {
 		if v.Record != nil {
-			v.Record.PingLatency = ptypes.DurationProto(td)
+			v.Record.PingLatency = durationpb.New(td)
 		}
 	}
 }
@@ -466,7 +462,7 @@ func (s *Server) Run(ctx context.Context, cfg config.Conf) func() error {
 					Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: &api.Members{Tag: []string{"_all"}}},
 					Message: &api.Message_PingMessage{PingMessage: &api.PingMessage{
 						Id: uuid.New().String(),
-						Ts: ptypes.TimestampNow(),
+						Ts: timestamppb.Now(),
 					}},
 				}
 				if err := s.Send(msg); err != nil {

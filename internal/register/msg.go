@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/shirou/gopsutil/v3/host"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Message is a struct that wraps the information required for an api.RegisterMessage to be sent.
@@ -36,24 +36,19 @@ func New(
 	}
 
 	mb := &api.Member{
-		Id:         uuid.New().String(),
-		Name:       hostName,
-		Capability: []string{"client", fmt.Sprintf("rsca-%s", version)},
-		Service:    checkNames,
-		Tag:        cfg.GetStringSlice("general.tags"),
-		Version:    version,
-		BuildDate:  buildDate,
-		GitHash:    gitHash,
-	}
-
-	if ts, err := ptypes.TimestampProto(startTime); err == nil {
-		mb.ProcessStart = ts
+		Id:           uuid.New().String(),
+		Name:         hostName,
+		Capability:   []string{"client", fmt.Sprintf("rsca-%s", version)},
+		Service:      checkNames,
+		Tag:          cfg.GetStringSlice("general.tags"),
+		Version:      version,
+		BuildDate:    buildDate,
+		GitHash:      gitHash,
+		ProcessStart: timestamppb.New(startTime),
 	}
 
 	if ut, err := host.BootTimeWithContext(context.Background()); err == nil {
-		if ts, err := ptypes.TimestampProto(time.Unix(int64(ut), 0)); err == nil {
-			mb.SystemStart = ts
-		}
+		mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0))
 	}
 
 	if is, err := api.InfoWithContext(context.Background(), time.Now()); err == nil {
