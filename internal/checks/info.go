@@ -13,13 +13,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
 	"github.com/kballard/go-shellquote"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Info is the details of a check.
@@ -122,12 +122,13 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 	exitCode, ob, oberr, err := i.wrapCmd(ctx, args)
 	status := api.ExitCodeToStatus(exitCode)
 	resp := &api.EventMessage{
-		Check:    i.Name,
-		Hostname: i.Hostname,
-		Type:     i.Type,
-		Id:       uuid.New().String(),
-		Output:   strings.TrimSpace(ob.String()),
-		Status:   status,
+		Check:            i.Name,
+		Hostname:         i.Hostname,
+		Type:             i.Type,
+		Id:               uuid.New().String(),
+		Output:           strings.TrimSpace(ob.String()),
+		Status:           status,
+		RequestTimestamp: timestamppb.New(t),
 	}
 
 	switch {
@@ -138,10 +139,6 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 		resp.OutputError = err.Error()
 	default:
 		resp.OutputError = strings.TrimSpace(oberr.String())
-	}
-
-	if ts, err := ptypes.TimestampProto(t); err == nil {
-		resp.RequestTimestamp = ts
 	}
 
 	if viper.GetDuration("general.jitter").Seconds() > 1 {
