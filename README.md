@@ -33,6 +33,6 @@ This should be run on the nagios server, it handles the connections from the `rs
 
 Copy [rscad.service](systemd/server/rscad.service) to `/etc/systemd/system/rscad.service`.
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fna4ma4%2Frsca.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fna4ma4%2Frsca?ref=badge_large)

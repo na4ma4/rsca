@@ -255,7 +255,8 @@ func (s *Server) processEventMessage(
 	).Inc()
 	s.logger.Debug("Received EventMessage")
 	s.logger.Info("received check data", zap.String("response.id", msg.EventMessage.GetId()),
-		zap.String("check.name", msg.EventMessage.GetCheck()), zap.String("check.status", msg.EventMessage.Status.String()),
+		zap.String("source.hostname", in.Envelope.Sender.GetName()), zap.String("check.name", msg.EventMessage.GetCheck()),
+		zap.String("check.status", msg.EventMessage.Status.String()),
 		zap.String("check.output", msg.EventMessage.GetOutput()))
 
 	if err := writeCheckResponse(s.logger, msg.EventMessage); err != nil {
