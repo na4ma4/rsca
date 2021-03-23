@@ -13,9 +13,8 @@ require (
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
 	github.com/onsi/ginkgo v1.15.1
 	github.com/onsi/gomega v1.11.0
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/common v0.19.0 // indirect
-	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.2
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
