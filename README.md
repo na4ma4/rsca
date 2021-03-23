@@ -1,6 +1,7 @@
 # rsca
 
 ![ci](https://github.com/na4ma4/rsca/workflows/ci/badge.svg)
+[![GoDoc](https://godoc.org/github.com/na4ma4/rsca/?status.svg)](https://godoc.org/github.com/na4ma4/rsca)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fna4ma4%2Frsca.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fna4ma4%2Frsca?ref=badge_shield)
 
 Remote Service Check Acceptor (alternative to NSCA)
