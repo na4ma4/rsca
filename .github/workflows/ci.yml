@@ -9,17 +9,6 @@ on:
       - 'v*'
 
 jobs:
-  fossa:
-    name: fossa
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Run FOSSA scan and upload build data
-        uses: fossa-contrib/fossa-action@v1
-        with:
-          fossa-api-key: 50763afce6626dd3764d1ee3d149ecb3
-
   golangci:
     name: lint
     runs-on: ubuntu-20.04
