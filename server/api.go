@@ -300,12 +300,8 @@ func (s *Server) updateMember(streamID string, m *api.Member) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if v, ok := s.streams[streamID]; ok {
-		if v.Record != nil {
-			m.LastSeen = v.Record.LastSeen
-			m.LastSeenAgo = v.Record.LastSeenAgo
-		}
-
+	if _, ok := s.streams[streamID]; ok {
+		m.LastSeen = timestamppb.Now()
 		s.streams[streamID].Record = m
 	}
 }
