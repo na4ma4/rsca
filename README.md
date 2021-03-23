@@ -1,6 +1,7 @@
 # rsca
 
 ![ci](https://github.com/na4ma4/rsca/workflows/ci/badge.svg)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fna4ma4%2Frsca.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fna4ma4%2Frsca?ref=badge_shield)
 
 Remote Service Check Acceptor (alternative to NSCA)
 
@@ -30,3 +31,7 @@ Copy [rsca.toml](test/rsca.toml) to `/etc/nagios/rsca.toml`.
 This should be run on the nagios server, it handles the connections from the `rsca` clients.
 
 Copy [rscad.service](systemd/server/rscad.service) to `/etc/systemd/system/rscad.service`.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fna4ma4%2Frsca.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fna4ma4%2Frsca?ref=badge_large)
