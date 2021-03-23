@@ -14,17 +14,19 @@ require (
 	github.com/onsi/ginkgo v1.15.2
 	github.com/onsi/gomega v1.11.0
 	github.com/prometheus/client_golang v1.10.0
-	github.com/prometheus/common v0.19.0 // indirect
+	github.com/prometheus/common v0.20.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.2
+	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
+	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.16.0
-	golang.org/x/net v0.0.0-20210315170653-34ac3e1c2000 // indirect
+	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005 // indirect
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4 // indirect
 	golang.org/x/text v0.3.5 // indirect
-	google.golang.org/genproto v0.0.0-20210315173758-2651cd453018 // indirect
+	google.golang.org/genproto v0.0.0-20210322173543-5f0e89347f5a // indirect
 	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.26.0
 )
