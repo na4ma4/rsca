@@ -22,7 +22,7 @@ GENERATED_FILES += artifacts/certs/key.pem
 GENERATED_FILES += test/test.cmd
 
 -include .makefiles/Makefile
--include .makefiles/pkg/protobuf/v1/Makefile
+-include .makefiles/pkg/protobuf/v2/Makefile
 -include .makefiles/pkg/go/v1/Makefile
 -include .makefiles/ext/na4ma4/pkg/lib-golangci-lint/v1/Makefile
 -include .makefiles/ext/na4ma4/pkg/lib-golint/v1/Makefile
