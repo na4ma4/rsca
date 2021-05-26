@@ -61,44 +61,44 @@ func NewServer(logger *zap.Logger, hostName string) *Server {
 				Help:      "Number of active connections",
 			}),
 			LifetimeConnections: promauto.NewCounter(prometheus.CounterOpts{
-				Name:      "connections_lifetime",
+				Name:      "connections_lifetime_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "Number of connections (lifetime)",
 			}),
 			// Received: map[string]*prometheus.CounterVec{},
 			Received: promauto.NewCounterVec(prometheus.CounterOpts{
-				Name:      "events_received",
+				Name:      "events_received_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "received packets, grouped by event",
 			}, []string{"source", "event"}),
 			EventStatus: promauto.NewCounterVec(prometheus.CounterOpts{
-				Name:      "check_results",
+				Name:      "check_results_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "received check results",
 			}, []string{"source", "check", "result"}),
 			PingTick: promauto.NewCounter(prometheus.CounterOpts{
-				Name:      "ping_tick",
+				Name:      "ping_tick_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "number of server ticks received",
 			}),
 			PingMessages: promauto.NewCounter(prometheus.CounterOpts{
-				Name:      "ping_messages",
+				Name:      "ping_messages_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "number of tick messages sent",
 			}),
 			PingMessageErrors: promauto.NewCounter(prometheus.CounterOpts{
-				Name:      "ping_message_errors",
+				Name:      "ping_message_errors_total",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "number of tick messages that failed to send",
 			}),
 			PingLatency: promauto.NewGaugeVec(prometheus.GaugeOpts{
-				Name:      "ping_latency_ms",
+				Name:      "ping_latency",
 				Namespace: "rsca",
 				Subsystem: "server",
 				Help:      "ping latency in ms",
@@ -120,7 +120,7 @@ func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerI
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
 	}
 
 	return &api.TriggerInfoResponse{
@@ -137,7 +137,7 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAl
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
 	}
 
 	return &api.TriggerAllResponse{
@@ -160,7 +160,7 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 
 	for _, m := range s.streams {
 		if err := stream.Send(m.Record); err != nil {
-			return status.Error(codes.Internal, err.Error())
+			return status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
 		}
 	}
 
@@ -436,7 +436,11 @@ func (s *Server) Send(msg *api.Message) error {
 		}
 	}
 
-	return multierr.Combine(errs...)
+	if err := multierr.Combine(errs...); err != nil {
+		return fmt.Errorf("unable to send messaage to some or all client streams: %w", err)
+	}
+
+	return nil
 }
 
 // Run is the background runner for the server.

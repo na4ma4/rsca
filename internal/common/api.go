@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	"github.com/na4ma4/rsca/api"
 	"go.uber.org/zap"
 )
@@ -19,7 +21,7 @@ func ProcessPingMessage(
 ) error {
 	logger.Debug("Received PingMessage")
 
-	return stream.Send(&api.Message{
+	if err := stream.Send(&api.Message{
 		Envelope: &api.Envelope{
 			Sender: &api.Member{
 				Name: hostName,
@@ -33,7 +35,11 @@ func ProcessPingMessage(
 				Ts:       msg.PingMessage.GetTs(),
 			},
 		},
-	})
+	}); err != nil {
+		return fmt.Errorf("unable to send ping message: %w", err)
+	}
+
+	return nil
 }
 
 // GeneratePingMessage is a common handler for generating PingMessage messages.

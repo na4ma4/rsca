@@ -3,6 +3,8 @@ linters:
   disable:
     - exhaustivestruct
     - forbidigo
+    - golint
     - maligned
     - interfacer
     - paralleltest
+    - scopelint

@@ -7,10 +7,7 @@ GIT_HASH ?= $(shell git show -s --format=%h)
 GO_DEBUG_ARGS   ?= -v -ldflags "-X main.version=$(GO_APP_VERSION)+debug -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE)"
 GO_RELEASE_ARGS ?= -v -ldflags "-X main.version=$(GO_APP_VERSION) -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE) -s -w"
 
-_GO_GTE_1_14 := $(shell expr `go version | cut -d' ' -f 3 | tr -d 'a-z' | cut -d'.' -f2` \>= 14)
-ifeq "$(_GO_GTE_1_14)" "1"
-_MODFILEARG := -modfile tools.mod
-endif
+GOLANGCILINT_VERSION ?= v1.40.1
 
 GENERATED_FILES += artifacts/certs/ca.pem
 GENERATED_FILES += artifacts/certs/server.pem

@@ -22,7 +22,6 @@ func (c Checks) NextRun(t time.Time) {
 }
 
 // GetChecksFromViper gets all the checks from the viper.Viper config.
-//nolint:wastedassign // the i++ is wasted, but it's the optimal pattern for this conversion.
 func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, hostName string) Checks {
 	checkListMap := make(map[string]bool)
 
