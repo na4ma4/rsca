@@ -4,10 +4,8 @@ GO_MATRIX_ARCH ?= amd64
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_HASH ?= $(shell git show -s --format=%h)
 
-GO_DEBUG_ARGS   ?= -v -ldflags "-X main.version=$(GO_APP_VERSION)+debug -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE)"
-GO_RELEASE_ARGS ?= -v -ldflags "-X main.version=$(GO_APP_VERSION) -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE) -s -w"
-
-GOLANGCILINT_VERSION ?= v1.40.1
+GO_DEBUG_ARGS   ?= -v -ldflags "-X main.version=$(GO_APP_VERSION)+debug -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE) -X main.builtBy=makefiles"
+GO_RELEASE_ARGS ?= -v -ldflags "-X main.version=$(GO_APP_VERSION) -X main.commit=$(GIT_HASH) -X main.date=$(APP_DATE) -X main.builtBy=makefiles -s -w"
 
 GENERATED_FILES += artifacts/certs/ca.pem
 GENERATED_FILES += artifacts/certs/server.pem
@@ -22,9 +20,6 @@ GENERATED_FILES += test/test.cmd
 -include .makefiles/pkg/protobuf/v2/Makefile
 -include .makefiles/pkg/go/v1/Makefile
 -include .makefiles/ext/na4ma4/pkg/lib-golangci-lint/v1/Makefile
--include .makefiles/ext/na4ma4/pkg/lib-golint/v1/Makefile
--include .makefiles/ext/na4ma4/pkg/lib-misspell/v1/Makefile
--include .makefiles/ext/na4ma4/pkg/lib-staticcheck/v1/Makefile
 -include .makefiles/ext/na4ma4/pkg/lib-cfssl/v1/Makefile
 -include .makefiles/ext/na4ma4/pkg/lib-goreleaser/v1/Makefile
 
