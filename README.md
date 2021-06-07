@@ -2,7 +2,10 @@
 
 ![ci](https://github.com/na4ma4/rsca/workflows/ci/badge.svg)
 [![GoDoc](https://godoc.org/github.com/na4ma4/rsca/?status.svg)](https://godoc.org/github.com/na4ma4/rsca)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fna4ma4%2Frsca.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fna4ma4%2Frsca?ref=badge_shield)
+[![GitHub issues](https://img.shields.io/github/issues/na4ma4/rsca)](https://github.com/na4ma4/rsca/issues)
+[![GitHub forks](https://img.shields.io/github/forks/na4ma4/rsca)](https://github.com/na4ma4/rsca/network)
+[![GitHub stars](https://img.shields.io/github/stars/na4ma4/rsca)](https://github.com/na4ma4/rsca/stargazers)
+[![GitHub license](https://img.shields.io/github/license/na4ma4/rsca)](https://github.com/na4ma4/rsca/blob/main/LICENSE)
 
 Remote Service Check Acceptor (alternative to NSCA)
 
