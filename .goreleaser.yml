@@ -105,7 +105,6 @@ brews:
     tap:
       owner: na4ma4
       name: homebrew-tap
-      token: "{{ .Env.GO_RELEASER_GITHUB_TOKEN }}"
     commit_author:
       name: goreleaserbot
       email: na4ma4@users.noreply.github.com
