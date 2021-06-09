@@ -76,26 +76,6 @@ func hostInfoCommand(cmd *cobra.Command, args []string) {
 	printHostList(tmpl, viper.GetBool("host.info.raw"), hostList)
 }
 
-func isHostMatch(query string, in *api.Member) bool {
-	if strings.EqualFold(query, in.Id) || strings.EqualFold(query, in.Name) {
-		return true
-	}
-
-	if strings.HasSuffix(query, "*") || strings.HasSuffix(query, "%") {
-		if strings.HasPrefix(in.Name, query[:len(query)-1]) {
-			return true
-		}
-	}
-
-	if strings.HasPrefix(query, "*") || strings.HasPrefix(query, "%") {
-		if strings.HasSuffix(in.Name, query[1:]) {
-			return true
-		}
-	}
-
-	return false
-}
-
 func findHostInList(logger *zap.Logger, query []string, stream api.Admin_ListHostsClient) []*api.Member {
 	hostList := []*api.Member{}
 
@@ -114,7 +94,7 @@ func findHostInList(logger *zap.Logger, query []string, stream api.Admin_ListHos
 		fillInAPIMember(in)
 
 		for _, match := range query {
-			if isHostMatch(match, in) {
+			if in.IsMatch(match) {
 				hostList = append(hostList, in)
 			}
 		}
