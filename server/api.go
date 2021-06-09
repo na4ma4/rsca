@@ -387,7 +387,7 @@ func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 		}
 
 		for _, r := range in.Name {
-			if strings.EqualFold(stream.Record.Name, r) {
+			if stream.Record.IsMatch(r) {
 				streamIDs[streamID] = struct{}{}
 			}
 		}

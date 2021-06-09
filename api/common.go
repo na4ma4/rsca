@@ -3,6 +3,7 @@ package api
 import (
 	context "context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/host"
@@ -34,4 +35,24 @@ func InfoWithContext(ctx context.Context, ts time.Time) (o *InfoStat, err error)
 	}
 
 	return nil, fmt.Errorf("infostat retrieval failed: %w", err)
+}
+
+func (x *Member) IsMatch(query string) bool {
+	if strings.EqualFold(query, x.Id) || strings.EqualFold(query, x.Name) {
+		return true
+	}
+
+	if strings.HasSuffix(query, "*") || strings.HasSuffix(query, "%") {
+		if strings.HasPrefix(x.Name, query[:len(query)-1]) {
+			return true
+		}
+	}
+
+	if strings.HasPrefix(query, "*") || strings.HasPrefix(query, "%") {
+		if strings.HasSuffix(x.Name, query[1:]) {
+			return true
+		}
+	}
+
+	return false
 }
