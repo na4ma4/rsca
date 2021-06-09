@@ -100,8 +100,6 @@ nfpms:
 brews:
   -
     name: rsc
-    ids:
-      - rsc
     tap:
       owner: na4ma4
       name: homebrew-tap
