@@ -2,24 +2,31 @@ package checks_test
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
+	"github.com/na4ma4/rsca/internal/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 func generateCheck(name, cmd string) *checks.Info {
+	return generateCheckWithPeriod(name, cmd, 10*time.Second)
+}
+
+func generateCheckWithPeriod(name, cmd string, period time.Duration) *checks.Info {
 	return &checks.Info{
 		Name:    name,
 		Timeout: 1 * time.Second,
 		Command: cmd,
 		Workdir: "../..",
-		Period:  10 * time.Second,
+		Period:  period,
 	}
 }
 
@@ -113,7 +120,9 @@ var _ = Describe("Check Runner", func() {
 
 		cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca-not-used")
 		logger := zap.NewNop()
-		checkList := []*checks.Info{generateCheck("TEST", "test/check_ok.sh")}
+		checkList := []*checks.Info{
+			generateCheck("TEST", "test/check_ok.sh"),
+		}
 		respChan := make(chan *api.EventMessage)
 
 		go func() {
@@ -125,10 +134,58 @@ var _ = Describe("Check Runner", func() {
 
 		runner := checks.RunChecks(ctx, cfg, logger, checkList, respChan)
 		err := runner()
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(MatchError(common.ErrContextDone))
 
 		Expect(respEvent).NotTo(BeNil())
 		Expect(respEvent.GetStatus()).To(Equal(api.Status_OK))
 		Expect(respEvent.GetOutput()).To(Equal("Test All OK"))
+	}, 2)
+
+	It("will detect checks scheduled faster than results", func() {
+		var respEvent *api.EventMessage
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca-not-used")
+		logcore, recorder := observer.New(zap.DebugLevel)
+		logger := zap.New(logcore)
+		checkList := []*checks.Info{
+			generateCheckWithPeriod("TEST_SLEEPY", "test/check_ok_short_sleep.sh", 5*time.Microsecond),
+		}
+		respChan := make(chan *api.EventMessage)
+
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		go func() {
+			count := 0
+			for resp := range respChan {
+				respEvent = resp
+				if count > 4 {
+					wg.Done()
+					cancel()
+
+					break
+				}
+				count++
+			}
+		}()
+
+		cfg.Set("general.check-tick", "5ms")
+
+		runner := checks.RunChecks(ctx, cfg, logger, checkList, respChan)
+
+		err := runner()
+		Expect(err).To(MatchError(common.ErrContextDone))
+
+		wg.Wait()
+
+		Expect(len(recorder.FilterMessage("check overlap, results requested before check completed").All())).
+			To(BeNumerically(">", 1))
+
+		Expect(respEvent).NotTo(BeNil())
+		Expect(respEvent.GetStatus()).To(Equal(api.Status_OK))
+		Expect(respEvent.GetOutput()).To(Equal("Test Sleepy All OK"))
 	}, 2)
 })

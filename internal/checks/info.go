@@ -17,8 +17,10 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
+	"github.com/na4ma4/rsca/internal/common"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -163,6 +165,7 @@ func RunChecks(
 	respChan chan *api.EventMessage,
 ) func() error {
 	ticker := time.NewTicker(cfg.GetDuration("general.check-tick"))
+	sf := singleflight.Group{}
 
 	return func() error {
 		for {
@@ -170,14 +173,59 @@ func RunChecks(
 			case <-ctx.Done():
 				ticker.Stop()
 
-				return nil
+				return common.ErrContextDone
 			case t := <-ticker.C:
 				for i := range checkList {
 					if t.After(checkList[i].NextRun) {
-						respChan <- checkList[i].Run(ctx, t)
+						go func(index int) {
+							r, _, shared := sf.Do(checkList[index].Name, func() (interface{}, error) {
+								res := checkList[i].Run(ctx, t)
+
+								return res, nil
+							})
+							if result, ok := r.(*api.EventMessage); ok {
+								if shared {
+									logger.Warn("check overlap, results requested before check completed",
+										zap.String("check.name", checkList[index].Name),
+										zap.Duration("check.period", checkList[index].Period),
+										zap.String("check.status", result.GetStatus().String()),
+										zap.String("check.output", result.GetOutput()),
+									)
+								}
+								respChan <- result
+							}
+						}(i)
 					}
 				}
 			}
 		}
 	}
 }
+
+// func SingleflightToResponse(
+// 	ctx context.Context,
+// 	logger *zap.Logger,
+// 	resultChan chan singleflight.Result,
+// 	respChan chan *api.EventMessage,
+// ) func() error {
+// 	return func() error {
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				return nil
+
+// 			case r := <-resultChan:
+// 				if result, ok := r.Val.(*api.EventMessage); ok {
+// 					if r.Shared {
+// 						logger.Warn("check overlap", zap.String("check.name", result.GetCheck()),
+// 							zap.String("check.status", result.GetStatus().String()),
+// 							zap.String("check.output", result.GetOutput()),
+// 						)
+// 					}
+
+// 					respChan <- result
+// 				}
+// 			}
+// 		}
+// 	}
+// }

@@ -157,25 +157,29 @@ func (c *Client) RunEvents(
 
 				return nil
 			case in, ok := <-respChan:
-				if ok {
-					c.outbox <- c.wrapEventMessage(in)
+				if !ok {
+					return common.ErrChannelClosed
 				}
+
+				c.outbox <- c.wrapEventMessage(in)
 			case in, ok := <-c.inbox:
-				if ok {
-					switch msg := in.Message.(type) {
-					case *api.Message_PingMessage:
-						go func() {
-							c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
-						}()
-					case *api.Message_TriggerAllMessage:
-						go c.processUpdateAll()
-					case *api.Message_RepeatRegistrationMessage:
-						go c.processRepeatRegister(ctx)
-					default:
-						c.logger.Info("Received unhandled message", zap.Reflect("message", in))
-					}
-					c.logger.Debug("message processing finished")
+				if !ok {
+					return common.ErrChannelClosed
 				}
+
+				switch msg := in.Message.(type) {
+				case *api.Message_PingMessage:
+					go func() {
+						c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
+					}()
+				case *api.Message_TriggerAllMessage:
+					go c.processUpdateAll()
+				case *api.Message_RepeatRegistrationMessage:
+					go c.processRepeatRegister(ctx)
+				default:
+					c.logger.Info("Received unhandled message", zap.Reflect("message", in))
+				}
+				c.logger.Debug("message processing finished")
 			}
 		}
 	}

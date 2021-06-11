@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -101,12 +102,13 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(cl.RunEvents(ctx, regmsg, respChan))
-
-	if err = stream.Send(streamMsg); err != nil {
-		logger.Fatal("unable to register with server", zap.Error(err))
-	}
+	checkErrFatal(stream.Send(streamMsg), logger, "unable to register with server")
 
 	if err := eg.Wait(); err != nil {
+		if errors.Is(err, common.ErrContextDone) || errors.Is(err, common.ErrChannelClosed) {
+			return
+		}
+
 		logger.Fatal("routine returned error", zap.Error(err))
 	}
 }
