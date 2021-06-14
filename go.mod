@@ -15,8 +15,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/pelletier/go-toml v1.9.1 // indirect
-	github.com/prometheus/client_golang v1.10.0
-	github.com/prometheus/common v0.20.0 // indirect
+	github.com/prometheus/client_golang v1.11.0
 	github.com/shirou/gopsutil/v3 v3.21.5
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cobra v1.1.3
@@ -26,7 +25,6 @@ require (
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210531225629-47163c9f4e4f // indirect
 	google.golang.org/genproto v0.0.0-20210524171403-669157292da3 // indirect
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
