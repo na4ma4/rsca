@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-//nolint: gochecknoglobals // cobra uses globals in main
+//nolint:gochecknoglobals // cobra uses globals in main
 var rootCmd = &cobra.Command{
 	Use: "rscad",
 	Run: mainCommand,
@@ -49,7 +49,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := cfg.ZapConfig().Build()
-	defer logger.Sync() //nolint: errcheck
+	defer logger.Sync() //nolint:errcheck
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -83,7 +83,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(sapi.Run(ctx, cfg))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
-	eg.Go(func() error { return gc.Serve(lis) }) //nolint: wrapcheck
+	eg.Go(func() error { return gc.Serve(lis) }) //nolint:wrapcheck
 
 	if cfg.GetBool("metrics.enabled") {
 		go func() {

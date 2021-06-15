@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// nolint: gochecknoglobals // cobra uses globals in main
+//nolint:gochecknoglobals // cobra uses globals in main
 var cmdHostList = &cobra.Command{
 	Use:   "ls",
 	Short: "List Hosts",
@@ -23,7 +23,7 @@ var cmdHostList = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
-// nolint:gochecknoinits // init is used in main for cobra
+//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHostList.PersistentFlags().StringP("format", "f",
 		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{time .SystemStart}}"+
@@ -40,7 +40,7 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()
-	defer logger.Sync() //nolint: errcheck
+	defer logger.Sync() //nolint:errcheck
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// nolint: gochecknoglobals // cobra uses globals in main
+//nolint:gochecknoglobals // cobra uses globals in main
 var cmdTriggerAll = &cobra.Command{
 	Use:     "all [options ...] [host...] [hostN]",
 	Aliases: []string{"a"},
@@ -21,7 +21,7 @@ var cmdTriggerAll = &cobra.Command{
 	Args:    cobra.MinimumNArgs(0),
 }
 
-// nolint:gochecknoinits // init is used in main for cobra
+//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdTrigger.AddCommand(cmdTriggerAll)
 	cmdTriggerAll.PersistentFlags().BoolP("info", "i", false,
@@ -49,7 +49,7 @@ func triggerAllCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()
-	defer logger.Sync() //nolint: errcheck
+	defer logger.Sync() //nolint:errcheck
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

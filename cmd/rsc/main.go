@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-//nolint: gochecknoglobals // cobra uses globals in main
+//nolint:gochecknoglobals // cobra uses globals in main
 var rootCmd = &cobra.Command{
 	Use: "rsc",
 }

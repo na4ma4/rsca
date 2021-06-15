@@ -120,7 +120,7 @@ func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerI
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
+		return nil, status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
 	}
 
 	return &api.TriggerInfoResponse{
@@ -137,7 +137,7 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAl
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
+		return nil, status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
 	}
 
 	return &api.TriggerAllResponse{
@@ -160,7 +160,7 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 
 	for _, m := range s.streams {
 		if err := stream.Send(m.Record); err != nil {
-			return status.Error(codes.Internal, err.Error()) //nolint: wrapcheck
+			return status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
 		}
 	}
 

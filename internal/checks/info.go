@@ -78,7 +78,7 @@ func (i *Info) wrapCmd(
 	wg := sync.WaitGroup{}
 	ob = bytes.NewBuffer(nil)
 	oberr = bytes.NewBuffer(nil)
-	cmd := exec.CommandContext(ctx, args[0], args[1:]...) //nolint: gosec
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec
 	cmd.Dir = i.Workdir
 
 	if pb, err := cmd.StdoutPipe(); err == nil {
@@ -144,7 +144,7 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 	if viper.GetDuration("general.jitter").Seconds() > 1 {
 		// don't care about how secure the random is, it's for jitter calculations
 		checkJitter := time.Duration(
-			rand.Intn(int(viper.GetDuration("general.jitter").Seconds())), //nolint: gosec
+			rand.Intn(int(viper.GetDuration("general.jitter").Seconds())), //nolint:gosec
 		) * time.Second
 		i.NextRun = time.Now().Add(i.Period).Add(checkJitter)
 	} else {
