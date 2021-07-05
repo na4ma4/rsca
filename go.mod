@@ -18,7 +18,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	go.uber.org/multierr v1.7.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.18.1
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.38.0
