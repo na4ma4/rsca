@@ -13,10 +13,9 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/prometheus/client_golang v1.11.0
-	github.com/shirou/gopsutil/v3 v3.21.5
+	github.com/shirou/gopsutil/v3 v3.21.6
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.8.1
-	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
