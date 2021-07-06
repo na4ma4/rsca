@@ -14,7 +14,7 @@ require (
 	github.com/onsi/gomega v1.13.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/shirou/gopsutil/v3 v3.21.6
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.18.1
