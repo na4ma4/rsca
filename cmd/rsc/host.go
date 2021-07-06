@@ -48,6 +48,7 @@ func fillInAPIMember(in *api.Member) {
 	in.Latency = in.PingLatency.AsDuration().String()
 }
 
+//nolint:gomnd // ignore padding count.
 func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*api.Member) {
 	sort.Slice(hostList, func(i, j int) bool { return hostList[i].Name < hostList[j].Name })
 

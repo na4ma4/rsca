@@ -27,7 +27,7 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 
 	for _, key := range vcfg.AllKeys() {
 		if strings.HasPrefix(key, "check.") {
-			token := strings.SplitN(key, ".", 3)
+			token := strings.SplitN(key, ".", 3) //nolint:gomnd // jwt tokens come in parts of 3.
 			checkListMap[token[1]] = true
 		}
 	}

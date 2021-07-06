@@ -3,6 +3,7 @@ package mainconfig
 import "github.com/spf13/viper"
 
 // ConfigInit is the common config initialisation for the commands.
+//nolint:gomnd // defaults are magic.
 func ConfigInit() {
 	viper.SetConfigName("rsca")
 	viper.SetConfigType("toml")

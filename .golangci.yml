@@ -4,6 +4,7 @@ linters:
     - exhaustivestruct
     - forbidigo
     - golint
+    - gomnd
     - maligned
     - interfacer
     - paralleltest
