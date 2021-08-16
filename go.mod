@@ -17,7 +17,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	go.uber.org/atomic v1.8.0 // indirect
 	go.uber.org/multierr v1.7.0
-	go.uber.org/zap v1.18.1
+	go.uber.org/zap v1.19.0
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/genproto v0.0.0-20210701191553-46259e63a0a9 // indirect
