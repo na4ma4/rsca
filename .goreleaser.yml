@@ -12,26 +12,38 @@ builds:
   - id: rsc
     main: ./cmd/rsc
     binary: rsc
-    targets:
-      - linux_amd64
-      - windows_amd64
-      - darwin_amd64
+    flags:
+      - -tags=release
+      - -buildmode=default
+      - -trimpath
+      - -v
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    goos: ['linux', 'darwin', 'windows']
+    goarch: ['amd64', 'arm']
 
   - id: rsca
     main: ./cmd/rsca
     binary: rsca
-    targets:
-      - linux_amd64
-      - windows_amd64
-      - darwin_amd64
+    flags:
+      - -tags=release
+      - -buildmode=default
+      - -trimpath
+      - -v
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    goos: ['linux', 'darwin', 'windows']
+    goarch: ['amd64']
 
   - id: rscad
     main: ./cmd/rscad
     binary: rscad
-    targets:
-      - linux_amd64
-      - windows_amd64
-      - darwin_amd64
+    flags:
+      - -tags=release
+      - -buildmode=default
+      - -trimpath
+      - -v
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    goos: ['linux', 'darwin', 'windows']
+    goarch: ['amd64']
 
 archives:
 
