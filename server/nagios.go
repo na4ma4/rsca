@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/na4ma4/permbits"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -47,7 +48,11 @@ func writeCommand(logger *zap.Logger, command string) error {
 	command = strings.TrimSpace(command)
 	commandToWrite := fmt.Sprintf("[%d] %s\n", time.Now().Unix(), command)
 
-	f, err := os.OpenFile(viper.GetString("nagios.command-file"), os.O_APPEND|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(
+		viper.GetString("nagios.command-file"),
+		os.O_APPEND|os.O_WRONLY,
+		permbits.UserRead+permbits.UserWrite,
+	)
 	if err != nil {
 		return fmt.Errorf("open command file for nagios: %w", err)
 	}
