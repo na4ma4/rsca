@@ -8,7 +8,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // basicFunctions are the set of initial functions provided to every template.
@@ -64,12 +64,10 @@ func ageFormat(source interface{}) string {
 	case time.Time:
 		return fmt.Sprintf("%0.2f", time.Since(s).Seconds())
 		// return s.Format(time.RFC3339)
-	case timestamp.Timestamp:
+	case timestamppb.Timestamp:
 		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
-		// return s.AsTime().Format(time.RFC3339)
-	case *timestamp.Timestamp:
+	case *timestamppb.Timestamp:
 		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
-		// return s.AsTime().Format(time.RFC3339)
 	default:
 		return fmt.Sprintf("%s", source)
 	}
@@ -80,9 +78,9 @@ func timeFormat(source interface{}) string {
 	switch s := source.(type) {
 	case time.Time:
 		return s.Format(time.RFC3339)
-	case timestamp.Timestamp:
+	case timestamppb.Timestamp:
 		return s.AsTime().Format(time.RFC3339)
-	case *timestamp.Timestamp:
+	case *timestamppb.Timestamp:
 		return s.AsTime().Format(time.RFC3339)
 	default:
 		return fmt.Sprintf("%s", source)
@@ -94,7 +92,9 @@ func dateFormat(source interface{}) string {
 	switch s := source.(type) {
 	case time.Time:
 		return s.Format("2006-01-02")
-	case timestamp.Timestamp:
+	case timestamppb.Timestamp:
+		return s.AsTime().Format("2006-01-02")
+	case *timestamppb.Timestamp:
 		return s.AsTime().Format("2006-01-02")
 	default:
 		return fmt.Sprintf("%q", source)
