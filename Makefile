@@ -15,7 +15,8 @@ GENERATED_FILES += artifacts/certs/client.pem
 GENERATED_FILES += artifacts/certs/client-key.pem
 GENERATED_FILES += artifacts/certs/cert.pem
 GENERATED_FILES += artifacts/certs/key.pem
-GENERATED_FILES += test/test.cmd
+
+GO_TEST_REQ += test/test.cmd
 
 -include .makefiles/Makefile
 -include .makefiles/pkg/protobuf/v2/Makefile
