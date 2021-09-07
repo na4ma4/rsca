@@ -36,8 +36,14 @@ builds:
       - -trimpath
       - -v
     mod_timestamp: '{{ .CommitTimestamp }}'
+    goarm: [ 6, 7 ]
     goos: ['linux', 'darwin', 'windows']
-    goarch: ['amd64']
+    goarch: ['amd64', 'arm', 'arm64']
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
 
   - id: rscad
     main: ./cmd/rscad
@@ -71,7 +77,7 @@ nfpms:
   -
     id: rsca
     package_name: rsca
-    file_name_template: "rsca_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    file_name_template: "rsca_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     builds:
       - rsca
     homepage: https://github.com/na4ma4/rsca
@@ -94,7 +100,7 @@ nfpms:
   -
     id: rscad
     package_name: rscad
-    file_name_template: "rscad_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    file_name_template: "rscad_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     builds:
       - rscad
     homepage: https://github.com/na4ma4/rsca
