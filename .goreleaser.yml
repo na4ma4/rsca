@@ -58,7 +58,8 @@ builds:
     goarch: ['amd64']
 
 archives:
-
+  allow_different_binary_count: true
+  
 checksum:
   algorithm: sha256
   name_template: 'checksums.txt'
