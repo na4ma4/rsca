@@ -35,3 +35,11 @@ Copy [rsca.toml](test/rsca.toml) to `/etc/nagios/rsca.toml`.
 This should be run on the nagios server, it handles the connections from the `rsca` clients.
 
 Copy [rscad.service](systemd/server/rscad.service) to `/etc/systemd/system/rscad.service`.
+
+## Support
+
+Reach out to the maintainer at one of the following places:
+
+[GitHub discussions](https://github.com/na4ma4/rsca/discussions)
+[GitHub issues](https://github.com/na4ma4/rsca/issues)
+The email which is located in [GitHub profile](https://github.com/na4ma4).
