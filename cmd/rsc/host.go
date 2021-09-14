@@ -100,5 +100,5 @@ func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*
 		}
 	}
 
-	w.Flush()
+	_ = w.Flush()
 }

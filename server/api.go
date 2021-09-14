@@ -163,7 +163,7 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 
 	if err := s.state.Walk(func(m *api.Member) error {
 		if err := stream.Send(m); err != nil {
-			return err
+			return err //nolint:wrapcheck // goes into status.Error
 		}
 
 		return nil
@@ -191,13 +191,9 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 
 		s.logger.Debug("defer delete stream", zap.String("stream.id", streamID))
 		s.metric.ActiveConnections.Dec()
-		s.state.(*state.Disk).WalkMember(func(in *state.Member) error {
-			s.logger.Debug("pipe-walk", zap.String("ID", in.ID), zap.String("StreamID", in.StreamID))
-			return nil
-		})
-
-		s.state.DeactivateByStreamID(streamID)
 		delete(s.streams, streamID)
+
+		_ = s.state.DeactivateByStreamID(streamID)
 	}()
 
 	return s.processPipe(streamID, stream)
@@ -252,7 +248,7 @@ func (s *Server) updateLastSeen(streamID string, t time.Time) {
 		if v.Record != nil {
 			v.Record.LastSeen = timestamppb.New(t)
 			v.Record.Active = true
-			s.state.AddWithStreamID(streamID, v.Record)
+			_ = s.state.AddWithStreamID(streamID, v.Record)
 		}
 	}
 }
@@ -320,7 +316,7 @@ func (s *Server) updateMember(streamID string, m *api.Member) {
 		m.Active = true
 		s.streams[streamID].Record = m
 
-		s.state.AddWithStreamID(streamID, s.streams[streamID].Record)
+		_ = s.state.AddWithStreamID(streamID, s.streams[streamID].Record)
 	}
 }
 
@@ -355,7 +351,7 @@ func (s *Server) setPingLatency(streamID string, td time.Duration) {
 			v.Record.Active = true
 		}
 
-		s.state.AddWithStreamID(streamID, v.Record)
+		_ = s.state.AddWithStreamID(streamID, v.Record)
 	}
 }
 

@@ -74,10 +74,10 @@ func (i *Info) splitCmd() (o []string) {
 func (i *Info) wrapCmd(
 	ctx context.Context,
 	args []string,
-) (exitCode int, ob *bytes.Buffer, oberr *bytes.Buffer, err error) {
+) (int, *bytes.Buffer, *bytes.Buffer, error) {
 	wg := sync.WaitGroup{}
-	ob = bytes.NewBuffer(nil)
-	oberr = bytes.NewBuffer(nil)
+	ob := bytes.NewBuffer(nil)
+	oberr := bytes.NewBuffer(nil)
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec
 	cmd.Dir = i.Workdir
 
@@ -89,7 +89,7 @@ func (i *Info) wrapCmd(
 		i.ioCopyWaitGroup(&wg, oberr, pberr)
 	}
 
-	exitCode, err = i.runCmd(cmd)
+	exitCode, err := i.runCmd(cmd)
 
 	wg.Wait()
 

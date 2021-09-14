@@ -37,19 +37,38 @@ func InfoWithContext(ctx context.Context, ts time.Time) (o *InfoStat, err error)
 	return nil, fmt.Errorf("infostat retrieval failed: %w", err)
 }
 
+// isMatchWildcardPrefix returns true if the query string starts with a wildcard character.
+func (x *Member) isMatchWildcardPrefix(query string) bool {
+	return strings.HasPrefix(query, "*") || strings.HasPrefix(query, "%")
+}
+
+// isMatchWildcardPrefix returns true if the query string ends with a wildcard character.
+func (x *Member) isMatchWildcardSuffix(query string) bool {
+	return strings.HasSuffix(query, "*") || strings.HasSuffix(query, "%")
+}
+
+// IsMatch returns if a member matches a supplied query string
+//
+// Query strings can start or end in a * or % to indicate wildcard matching.
 func (x *Member) IsMatch(query string) bool {
 	if strings.EqualFold(query, x.Id) || strings.EqualFold(query, x.Name) {
 		return true
 	}
 
-	if strings.HasSuffix(query, "*") || strings.HasSuffix(query, "%") {
+	if x.isMatchWildcardSuffix(query) {
 		if strings.HasPrefix(x.Name, query[:len(query)-1]) {
 			return true
 		}
 	}
 
-	if strings.HasPrefix(query, "*") || strings.HasPrefix(query, "%") {
+	if x.isMatchWildcardPrefix(query) {
 		if strings.HasSuffix(x.Name, query[1:]) {
+			return true
+		}
+	}
+
+	if x.isMatchWildcardPrefix(query) && x.isMatchWildcardSuffix(query) {
+		if strings.Contains(x.Name, query[1:len(query)-1]) {
 			return true
 		}
 	}

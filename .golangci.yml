@@ -1,11 +1,23 @@
 linters:
   enable-all: true
+  exclude-use-default: false
   disable:
     - exhaustivestruct
     - forbidigo
     - golint
-    - gomnd
-    - maligned
     - interfacer
+    - maligned
     - paralleltest
     - scopelint
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - 'Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked'
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  errcheck:
+    exclude-functions:
+      - '(io.Closer).Close'

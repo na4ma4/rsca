@@ -56,7 +56,8 @@ func writeCommand(logger *zap.Logger, command string) error {
 	if err != nil {
 		return fmt.Errorf("open command file for nagios: %w", err)
 	}
-	defer f.Close()
+
+	defer func() { _ = f.Close() }()
 
 	logger.Debug("writing to nagios command-file", zap.String("command", commandToWrite))
 
