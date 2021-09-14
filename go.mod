@@ -3,6 +3,8 @@ module github.com/na4ma4/rsca
 go 1.16
 
 require (
+	github.com/asdine/storm/v3 v3.2.1 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/google/uuid v1.3.0

@@ -13,6 +13,7 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/state"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/multierr"
@@ -27,6 +28,7 @@ import (
 type Server struct {
 	logger   *zap.Logger
 	hostname string
+	state    state.State
 	streams  map[string]*serverStream
 	lock     sync.Mutex
 	metric   *metric
@@ -49,10 +51,11 @@ type serverStream struct {
 }
 
 // NewServer returns a prepared server object.
-func NewServer(logger *zap.Logger, hostName string) *Server {
+func NewServer(logger *zap.Logger, st state.State) *Server {
 	return &Server{
 		logger:  logger,
 		streams: map[string]*serverStream{},
+		state:   st,
 		metric: &metric{
 			ActiveConnections: promauto.NewGauge(prometheus.GaugeOpts{
 				Name:      "connections_active",
@@ -158,10 +161,14 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	for _, m := range s.streams {
-		if err := stream.Send(m.Record); err != nil {
-			return status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
+	if err := s.state.Walk(func(m *api.Member) error {
+		if err := stream.Send(m); err != nil {
+			return err
 		}
+
+		return nil
+	}); err != nil {
+		return status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
 	}
 
 	return nil
@@ -184,6 +191,12 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 
 		s.logger.Debug("defer delete stream", zap.String("stream.id", streamID))
 		s.metric.ActiveConnections.Dec()
+		s.state.(*state.Disk).WalkMember(func(in *state.Member) error {
+			s.logger.Debug("pipe-walk", zap.String("ID", in.ID), zap.String("StreamID", in.StreamID))
+			return nil
+		})
+
+		s.state.DeactivateByStreamID(streamID)
 		delete(s.streams, streamID)
 	}()
 
@@ -238,6 +251,8 @@ func (s *Server) updateLastSeen(streamID string, t time.Time) {
 	if v, ok := s.streams[streamID]; ok {
 		if v.Record != nil {
 			v.Record.LastSeen = timestamppb.New(t)
+			v.Record.Active = true
+			s.state.AddWithStreamID(streamID, v.Record)
 		}
 	}
 }
@@ -302,7 +317,10 @@ func (s *Server) updateMember(streamID string, m *api.Member) {
 
 	if _, ok := s.streams[streamID]; ok {
 		m.LastSeen = timestamppb.Now()
+		m.Active = true
 		s.streams[streamID].Record = m
+
+		s.state.AddWithStreamID(streamID, s.streams[streamID].Record)
 	}
 }
 
@@ -334,7 +352,10 @@ func (s *Server) setPingLatency(streamID string, td time.Duration) {
 	if v, ok := s.streams[streamID]; ok {
 		if v.Record != nil {
 			v.Record.PingLatency = durationpb.New(td)
+			v.Record.Active = true
 		}
+
+		s.state.AddWithStreamID(streamID, v.Record)
 	}
 }
 

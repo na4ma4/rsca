@@ -13,6 +13,7 @@ import (
 	"github.com/na4ma4/rsca/internal/certs"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/mainconfig"
+	"github.com/na4ma4/rsca/internal/state"
 	"github.com/na4ma4/rsca/server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -69,9 +70,16 @@ func mainCommand(cmd *cobra.Command, args []string) {
 
 	logger.Info("server listening", zap.String("bind", viper.GetString("server.listen")))
 
-	hostName := getHostname(cfg)
+	st, err := state.NewDiskState(logger, cfg.GetString("server.state-store"))
+	if err != nil {
+		logger.Fatal("failed to create disk state storage", zap.Error(err))
+	}
+
+	defer st.Close()
+
+	// hostName := getHostname(cfg)
 	eg, ctx := errgroup.WithContext(ctx)
-	sapi := server.NewServer(logger, hostName)
+	sapi := server.NewServer(logger, st)
 	gc := grpc.NewServer(cp.ServerOption())
 
 	api.RegisterRSCAServer(gc, sapi)
@@ -100,11 +108,11 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	<-ctx.Done()
 }
 
-func getHostname(cfg config.Conf) string {
-	hostName := cfg.GetString("general.hostname")
-	if hostName == "" {
-		hostName, _ = os.Hostname()
-	}
+// func getHostname(cfg config.Conf) string {
+// 	hostName := cfg.GetString("general.hostname")
+// 	if hostName == "" {
+// 		hostName, _ = os.Hostname()
+// 	}
 
-	return hostName
-}
+// 	return hostName
+// }

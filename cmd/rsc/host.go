@@ -66,6 +66,7 @@ func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*
 			"LastSeenAgo":  "Last Seen Ago",
 			"Latency":      "Latency",
 			"Name":         "Name",
+			"Active":       "Active",
 			"PingLatency":  "Ping Latency",
 			"SystemStart":  "System Start",
 			"ProcessStart": "Process Start",

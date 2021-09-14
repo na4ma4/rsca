@@ -26,7 +26,7 @@ var cmdHostList = &cobra.Command{
 //nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHostList.PersistentFlags().StringP("format", "f",
-		"{{.Name}}\t{{time .LastSeen}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{time .SystemStart}}"+
+		"{{.Name}}\t{{time .LastSeen}}\t{{.Active}}\t{{.LastSeenAgo}}\t{{.Tag}}\t{{.Capability}}\t{{time .SystemStart}}"+
 			"\t{{time .ProcessStart}}\t{{.Service}}",
 		"Output format (go template)",
 	)

@@ -49,7 +49,7 @@ message Member {
     InfoStat info_stat = 200;
     google.protobuf.Timestamp system_start = 201;
     google.protobuf.Timestamp process_start = 202;
-
+    bool active = 203;
 
     // Only used in rendering host lists, not transferred over the wire.
     string last_seen_ago = 1001;
