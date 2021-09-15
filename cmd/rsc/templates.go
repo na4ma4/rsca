@@ -8,6 +8,7 @@ import (
 	"text/template"
 	"time"
 
+	ts "github.com/na4ma4/go-timestring"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -34,7 +35,7 @@ var basicFunctions = template.FuncMap{
 	"tf":       stringTrueFalse,
 	"yn":       stringYesNo,
 	"t":        stringTab,
-	"age":      ageFormat,
+	"age":      humanAgeFormat,
 	"time":     timeFormat,
 	"date":     dateFormat,
 }
@@ -58,20 +59,34 @@ func padWithSpace(source string, prefix, suffix int) string {
 	return strings.Repeat(" ", prefix) + source + strings.Repeat(" ", suffix)
 }
 
-// ageFormat returns time in seconds ago.
-func ageFormat(source interface{}) string {
+// humanAgeFormat returns a duration in a human readable format.
+func humanAgeFormat(source interface{}) string {
 	switch s := source.(type) {
 	case time.Time:
-		return fmt.Sprintf("%0.2f", time.Since(s).Seconds())
-		// return s.Format(time.RFC3339)
+		return ts.LongProcess.Option(ts.Abbreviated, ts.ShowMSOnSeconds).String(time.Since(s))
 	case timestamppb.Timestamp:
-		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
+		return ts.LongProcess.Option(ts.Abbreviated, ts.ShowMSOnSeconds).String(time.Since(s.AsTime()))
 	case *timestamppb.Timestamp:
-		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
+		return ts.LongProcess.Option(ts.Abbreviated, ts.ShowMSOnSeconds).String(time.Since(s.AsTime()))
 	default:
 		return fmt.Sprintf("%s", source)
 	}
 }
+
+// // ageFormat returns time in seconds ago.
+// func ageFormat(source interface{}) string {
+// 	switch s := source.(type) {
+// 	case time.Time:
+// 		return fmt.Sprintf("%0.2f", time.Since(s).Seconds())
+// 		// return s.Format(time.RFC3339)
+// 	case timestamppb.Timestamp:
+// 		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
+// 	case *timestamppb.Timestamp:
+// 		return fmt.Sprintf("%0.2f", time.Since(s.AsTime()).Seconds())
+// 	default:
+// 		return fmt.Sprintf("%s", source)
+// 	}
+// }
 
 // timeFormat returns time in RFC3339 format.
 func timeFormat(source interface{}) string {

@@ -18,6 +18,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/na4ma4/config v0.5.0
+	github.com/na4ma4/go-timestring v0.3.0
 	github.com/na4ma4/permbits v0.1.0
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
