@@ -46,6 +46,7 @@ func StateReaper(
 
 				for k := range expireState {
 					logger.Info("deactivating host for inactivity", zap.String("rsca.client.name", expireState[k]))
+
 					if err := st.DeactivateByHostname(expireState[k]); err != nil {
 						logger.Error("unable to deactive member", zap.Error(err))
 					}
