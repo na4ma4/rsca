@@ -58,12 +58,11 @@ install: $(REQ) $(_SRC) | $(USE)
 ######################
 # Custom
 ######################
-
-artifacts/protobuf/go.proto_paths.jq: artifacts/protobuf/go.proto_paths
+artifacts/protobuf/args/go.jq: artifacts/protobuf/args/go
 	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
 	jq -Rn 'inputs | select(.)' < "$(^)" > "$(@)"
 
-.vscode/settings.json: artifacts/protobuf/go.proto_paths.jq
+.vscode/settings.json: artifacts/protobuf/args/go.jq
 	-@mkdir -p "$(MF_PROJECT_ROOT)/$(@D)"
 	$(if $(shell cat "$(@)" 2>/dev/null),cat "$(@)",echo '{}') | jq --slurpfile po "$(<)" '.protoc.options=$$po' > "$(@).tmp"
 	mv "$(@).tmp" "$(@)"

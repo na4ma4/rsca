@@ -57,6 +57,9 @@ func (d *Disk) Close() error {
 
 // AddWithStreamID adds a member to the internal list along with their streamID.
 func (d *Disk) AddWithStreamID(streamID string, in *api.Member) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
 	mb := Member{
 		ID:       in.GetName(),
 		StreamID: streamID,
@@ -70,21 +73,39 @@ func (d *Disk) AddWithStreamID(streamID string, in *api.Member) error {
 	return nil
 }
 
-// func (d *Disk) GetByHostname(hostname string) (*api.Member, bool) {
-// 	d.lock.Lock()
-// 	defer d.lock.Unlock()
+// GetMemberByHostname returns a member by their hostname.
+func (d *Disk) GetMemberByHostname(hostname string) (*api.Member, bool) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
 
-// 	var m Member
-// 	if err := d.db.One("ID", hostname, &m); err != nil {
-// 		return nil, false
-// 	}
+	var m Member
+	if err := d.db.One("ID", hostname, &m); err != nil {
+		return nil, false
+	}
 
-// 	if m.Member != nil {
-// 		return m.Member, true
-// 	}
+	if m.Member != nil {
+		return m.Member, true
+	}
 
-// 	return nil, false
-// }
+	return nil, false
+}
+
+// GetStreamIDByMember returns a stream ID by a specified member.
+func (d *Disk) GetStreamIDByMember(in *api.Member) (string, bool) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	var m Member
+	if err := d.db.One("ID", in.GetName(), &m); err != nil {
+		return "", false
+	}
+
+	if m.StreamID != "" {
+		return m.StreamID, true
+	}
+
+	return "", false
+}
 
 // Walk will run a supplied function over each of the members in the storage.
 func (d *Disk) Walk(walkFunc func(*api.Member) error) error {
@@ -125,17 +146,21 @@ func (d *Disk) Walk(walkFunc func(*api.Member) error) error {
 // 	return nil
 // }
 
-// func (d *Disk) Delete(in *api.Member) error {
-// 	var m Member
+// Delete removes a member and will disconnect them if they're connected.
+func (d *Disk) Delete(in *api.Member) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
 
-// 	if err := d.db.One("ID", in.GetName(), &m); err == nil {
-// 		if err := d.db.DeleteStruct(&m); err != nil {
-// 			return fmt.Errorf("unable to delete member: %w", err)
-// 		}
-// 	}
+	var m Member
 
-// 	return nil
-// }
+	if err := d.db.One("ID", in.GetName(), &m); err == nil {
+		if err := d.db.DeleteStruct(&m); err != nil {
+			return fmt.Errorf("unable to delete member: %w", err)
+		}
+	}
+
+	return nil
+}
 
 // func (d *Disk) Deactivate(in *api.Member) error {
 // 	var m Member
@@ -153,6 +178,9 @@ func (d *Disk) Walk(walkFunc func(*api.Member) error) error {
 
 // DeactivateByStreamID sets the Active property on a member to false.
 func (d *Disk) DeactivateByStreamID(streamID string) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
 	var m Member
 
 	if err := d.db.One("StreamID", streamID, &m); err == nil {

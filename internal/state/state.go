@@ -12,11 +12,13 @@ type State interface {
 	DeactivateByStreamID(streamID string) error
 	// Walk will run a supplied function over each of the members in the storage.
 	Walk(walkFunc func(*api.Member) error) error
-
-	// GetByHostname returns a member by their hostname.
-	// GetByHostname(string) (*api.Member, bool)
+	// GetMemberByHostname returns a member by their hostname.
+	GetMemberByHostname(string) (*api.Member, bool)
+	// GetStreamIDByMember returns a stream ID by a specified member.
+	GetStreamIDByMember(*api.Member) (string, bool)
+	// Delete removes a member and will disconnect them if they're connected.
+	Delete(*api.Member) error
 
 	// Add(*api.Member) error
-	// Delete(*api.Member) error
 	// Deactivate(*api.Member) error
 }

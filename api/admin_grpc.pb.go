@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AdminClient interface {
 	ListHosts(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Admin_ListHostsClient, error)
+	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...grpc.CallOption) (*RemoveHostResponse, error)
 	TriggerAll(ctx context.Context, in *Members, opts ...grpc.CallOption) (*TriggerAllResponse, error)
 	TriggerInfo(ctx context.Context, in *Members, opts ...grpc.CallOption) (*TriggerInfoResponse, error)
 }
@@ -63,6 +64,15 @@ func (x *adminListHostsClient) Recv() (*Member, error) {
 	return m, nil
 }
 
+func (c *adminClient) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...grpc.CallOption) (*RemoveHostResponse, error) {
+	out := new(RemoveHostResponse)
+	err := c.cc.Invoke(ctx, "/rsca.api.Admin/RemoveHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminClient) TriggerAll(ctx context.Context, in *Members, opts ...grpc.CallOption) (*TriggerAllResponse, error) {
 	out := new(TriggerAllResponse)
 	err := c.cc.Invoke(ctx, "/rsca.api.Admin/TriggerAll", in, out, opts...)
@@ -86,6 +96,7 @@ func (c *adminClient) TriggerInfo(ctx context.Context, in *Members, opts ...grpc
 // for forward compatibility
 type AdminServer interface {
 	ListHosts(*Empty, Admin_ListHostsServer) error
+	RemoveHost(context.Context, *RemoveHostRequest) (*RemoveHostResponse, error)
 	TriggerAll(context.Context, *Members) (*TriggerAllResponse, error)
 	TriggerInfo(context.Context, *Members) (*TriggerInfoResponse, error)
 }
@@ -96,6 +107,9 @@ type UnimplementedAdminServer struct {
 
 func (UnimplementedAdminServer) ListHosts(*Empty, Admin_ListHostsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListHosts not implemented")
+}
+func (UnimplementedAdminServer) RemoveHost(context.Context, *RemoveHostRequest) (*RemoveHostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveHost not implemented")
 }
 func (UnimplementedAdminServer) TriggerAll(context.Context, *Members) (*TriggerAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerAll not implemented")
@@ -134,6 +148,24 @@ type adminListHostsServer struct {
 
 func (x *adminListHostsServer) Send(m *Member) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func _Admin_RemoveHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveHostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).RemoveHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rsca.api.Admin/RemoveHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).RemoveHost(ctx, req.(*RemoveHostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Admin_TriggerAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -179,6 +211,10 @@ var Admin_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "rsca.api.Admin",
 	HandlerType: (*AdminServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RemoveHost",
+			Handler:    _Admin_RemoveHost_Handler,
+		},
 		{
 			MethodName: "TriggerAll",
 			Handler:    _Admin_TriggerAll_Handler,

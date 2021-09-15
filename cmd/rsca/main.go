@@ -100,7 +100,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg.Go(checks.RunChecks(ctx, cfg, logger, checkList, respChan))
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
-	eg.Go(cl.RunEvents(ctx, regmsg, respChan))
+	eg.Go(cl.RunEvents(ctx, cancel, regmsg, respChan))
 
 	if err = stream.Send(streamMsg); err != nil {
 		logger.Fatal("unable to register with server", zap.Error(err))

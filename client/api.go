@@ -37,7 +37,7 @@ func NewClient(logger *zap.Logger, hostName string, checkList checks.Checks) *Cl
 	}
 }
 
-func (c *Client) streamMessages(cancel context.CancelFunc, stream api.RSCA_PipeClient) {
+func (c *Client) streamMessages(ctx context.Context, cancel context.CancelFunc, stream api.RSCA_PipeClient) {
 	for {
 		in, err := stream.Recv()
 
@@ -60,6 +60,10 @@ func (c *Client) streamMessages(cancel context.CancelFunc, stream api.RSCA_PipeC
 			return
 		}
 
+		if ctx.Err() != nil {
+			return
+		}
+
 		c.inbox <- in
 	}
 }
@@ -73,7 +77,7 @@ func (c *Client) Pipe(
 ) func() error {
 	registrationTicker := time.NewTicker(cfg.GetDuration("general.registration-interval"))
 
-	go c.streamMessages(cancel, stream)
+	go c.streamMessages(ctx, cancel, stream)
 
 	return func() error {
 		for {
@@ -93,6 +97,7 @@ func (c *Client) Pipe(
 				if ok {
 					if err := stream.Send(out); err != nil {
 						c.logger.Error("unable to send message", zap.Error(err))
+						cancel()
 					}
 				}
 			}
@@ -144,6 +149,7 @@ func (c *Client) wrapEventMessage(in *api.EventMessage) *api.Message {
 //nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
 func (c *Client) RunEvents(
 	ctx context.Context,
+	cancel context.CancelFunc,
 	regmsg *register.Message,
 	respChan chan *api.EventMessage,
 ) func() error {
@@ -162,19 +168,24 @@ func (c *Client) RunEvents(
 				}
 			case in, ok := <-c.inbox:
 				if ok {
-					switch msg := in.Message.(type) {
-					case *api.Message_PingMessage:
-						go func() {
-							c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
-						}()
-					case *api.Message_TriggerAllMessage:
-						go c.processUpdateAll()
-					case *api.Message_RepeatRegistrationMessage:
-						go c.processRepeatRegister(ctx)
-					default:
-						c.logger.Info("Received unhandled message", zap.Reflect("message", in))
+					if in != nil && in.Message != nil {
+						switch msg := in.Message.(type) {
+						case *api.Message_PingMessage:
+							go func() {
+								c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
+							}()
+						case *api.Message_TriggerAllMessage:
+							go c.processUpdateAll()
+						case *api.Message_RepeatRegistrationMessage:
+							go c.processRepeatRegister(ctx)
+						default:
+							c.logger.Info("Received unhandled message", zap.Reflect("message", in))
+						}
+						c.logger.Debug("message processing finished")
+					} else {
+						c.logger.Debug("nil message received")
+						cancel()
 					}
-					c.logger.Debug("message processing finished")
 				}
 			}
 		}

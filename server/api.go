@@ -24,6 +24,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// ssmChannelSize is the size of the buffered channel for serverStreamMessage.
+const ssmChannelSize = 2
+
 // Server is a api.RSCAServer for co-ordinating streams from clients.
 type Server struct {
 	logger   *zap.Logger
@@ -46,8 +49,14 @@ type metric struct {
 }
 
 type serverStream struct {
-	Stream api.RSCA_PipeServer
-	Record *api.Member
+	Stream       api.RSCA_PipeServer
+	TriggerClose context.CancelFunc
+	Record       *api.Member
+}
+
+type serverStreamMessage struct {
+	M *api.Message
+	E error
 }
 
 // NewServer returns a prepared server object.
@@ -156,6 +165,42 @@ func (s *Server) streamIDsToHostnames(streamIDs []string) (hostNames []string) {
 	return
 }
 
+// RemoveHost removes a specified list of hosts from the server.
+func (s *Server) RemoveHost(ctx context.Context, in *api.RemoveHostRequest) (*api.RemoveHostResponse, error) {
+	s.logger.Debug("RemoveHost()", zap.Strings("targets", in.GetNames()))
+
+	o := &api.RemoveHostResponse{
+		Names: []string{},
+	}
+
+	for _, hostname := range in.GetNames() {
+		if v, ok := s.state.GetMemberByHostname(hostname); ok {
+			if streamID, ok := s.state.GetStreamIDByMember(v); ok {
+				if st, ok := s.streams[streamID]; ok && st.TriggerClose != nil {
+					s.logger.Debug("remove host, closing channel", zap.String("target", hostname), zap.String("streamID", streamID))
+					st.TriggerClose()
+				}
+			}
+
+			if err := s.state.Delete(v); err != nil {
+				s.logger.Debug("unable to remove host from state storage", zap.String("target", hostname), zap.Error(err))
+
+				return o, status.Error(codes.Internal, fmt.Sprintf("unable to delete host: %s", err)) //nolint:wrapcheck
+			}
+
+			s.logger.Debug("host removed from storage", zap.String("target", hostname))
+
+			o.Names = append(o.Names, v.GetName())
+		}
+
+		if v, ok := s.state.GetMemberByHostname(hostname); ok {
+			s.logger.Debug("host found in storage after removal", zap.String("target", hostname), zap.Reflect("member", v))
+		}
+	}
+
+	return o, nil
+}
+
 // ListHosts returns a list of hosts currently registered with the server.
 func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) error {
 	s.lock.Lock()
@@ -177,9 +222,13 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 // Pipe handles incoming streams and maintains the stream map.
 func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 	streamID := uuid.New().String()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	s.lock.Lock()
-	s.streams[streamID] = &serverStream{Stream: stream}
+	s.streams[streamID] = &serverStream{
+		Stream:       stream,
+		TriggerClose: cancel,
+	}
 	s.lock.Unlock()
 
 	s.metric.ActiveConnections.Inc()
@@ -196,51 +245,96 @@ func (s *Server) Pipe(stream api.RSCA_PipeServer) error {
 		_ = s.state.DeactivateByStreamID(streamID)
 	}()
 
-	return s.processPipe(streamID, stream)
+	msgStream := s.processPipeMessages(streamID, stream)
+
+	return s.processPipe(ctx, streamID, stream, msgStream)
+}
+
+func (s *Server) processPipeMessages(streamID string, stream api.RSCA_PipeServer) chan serverStreamMessage {
+	o := make(chan serverStreamMessage, ssmChannelSize)
+
+	go func() {
+		for {
+			in, err := stream.Recv()
+			o <- serverStreamMessage{
+				M: in,
+				E: err,
+			}
+
+			if err != nil {
+				if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
+					s.logger.Debug("pipe process thread closing stream (with error)",
+						zap.String("stream.id", streamID),
+						zap.Error(err),
+					)
+
+					return
+				}
+
+				s.logger.Debug("pipe process thread closing stream", zap.String("stream.id", streamID))
+
+				return
+			}
+		}
+	}()
+
+	return o
 }
 
 // processPipe is the main message handler.
 //nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
-func (s *Server) processPipe(streamID string, stream api.RSCA_PipeServer) error {
+func (s *Server) processPipe(
+	ctx context.Context,
+	streamID string,
+	stream api.RSCA_PipeServer,
+	msgStream chan serverStreamMessage,
+) error {
 	for {
-		in, err := stream.Recv()
-		if err != nil {
-			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
-				s.logger.Debug("closing stream", zap.String("stream.id", streamID), zap.Error(err))
+		select {
+		case m, ok := <-msgStream:
+			if ok {
+				if err := m.E; err != nil {
+					if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
+						s.logger.Debug("closing stream", zap.String("stream.id", streamID), zap.Error(err))
 
-				return nil
+						return nil
+					}
+
+					return fmt.Errorf("stream closed: %w", err)
+				}
+
+				s.updateLastSeen(streamID, time.Now())
+
+				switch msg := m.M.Message.(type) {
+				case *api.Message_EventMessage:
+					s.processEventMessage(m.M, msg)
+				case *api.Message_RegisterMessage:
+					s.processRegisterMessage(streamID, m.M, msg)
+				case *api.Message_MemberUpdateMessage:
+					s.processMemberUpdateMessage(streamID, m.M, msg)
+				case *api.Message_PingMessage:
+					s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
+					s.metric.Received.WithLabelValues(m.M.Envelope.Sender.GetName(), "PingMessage").Inc()
+
+					if err := common.ProcessPingMessage(s.logger, stream, s.hostname, m.M, msg); err != nil {
+						s.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
+					}
+				case *api.Message_PongMessage:
+					s.processPongMessage(streamID, m.M, msg)
+				default:
+					s.metric.Received.WithLabelValues("_all", "Unknown").Inc()
+					s.metric.Received.WithLabelValues(m.M.Envelope.Sender.GetName(), "Unknown").Inc()
+					s.logger.Info("Received unhandled message", zap.Reflect("message", m.M))
+				}
 			}
-
-			return fmt.Errorf("stream closed: %w", err)
-		}
-
-		s.updateLastSeen(streamID, time.Now())
-
-		switch msg := in.Message.(type) {
-		case *api.Message_EventMessage:
-			s.processEventMessage(in, msg)
-		case *api.Message_RegisterMessage:
-			s.processRegisterMessage(streamID, in, msg)
-		case *api.Message_MemberUpdateMessage:
-			s.processMemberUpdateMessage(streamID, in, msg)
-		case *api.Message_PingMessage:
-			s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
-			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PingMessage").Inc()
-
-			if err := common.ProcessPingMessage(s.logger, stream, s.hostname, in, msg); err != nil {
-				s.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
-			}
-		case *api.Message_PongMessage:
-			s.processPongMessage(streamID, in, msg)
-		default:
-			s.metric.Received.WithLabelValues("_all", "Unknown").Inc()
-			s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "Unknown").Inc()
-			s.logger.Info("Received unhandled message", zap.Reflect("message", in))
+		case <-ctx.Done():
+			return fmt.Errorf("stream context closed: %w", ctx.Err())
 		}
 	}
 }
 
 func (s *Server) updateLastSeen(streamID string, t time.Time) {
+	s.logger.Debug("updateLastSeen()", zap.String("streamID", streamID))
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -308,6 +402,7 @@ func (s *Server) processMemberUpdateMessage(
 }
 
 func (s *Server) updateMember(streamID string, m *api.Member) {
+	s.logger.Debug("updateMember()", zap.String("streamID", streamID), zap.Reflect("member", m))
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -342,6 +437,7 @@ func (s *Server) processPongMessage(
 }
 
 func (s *Server) setPingLatency(streamID string, td time.Duration) {
+	s.logger.Debug("setPingLatency()", zap.String("streamID", streamID))
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

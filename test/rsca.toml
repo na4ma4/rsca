@@ -20,6 +20,7 @@ cert-dir="artifacts/certs"
 [server]
 listen="0.0.0.0:15888"
 cert-dir="artifacts/certs"
+state-store="artifacts/rsca-state.db"
 
 [check.HOST_CHECK]
 name="HOST"
