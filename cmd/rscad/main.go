@@ -90,6 +90,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 
 	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(sapi.Run(ctx, cfg))
+	eg.Go(common.StateReaper(ctx, cfg, logger, st))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(func() error { return gc.Serve(lis) }) //nolint:wrapcheck
 

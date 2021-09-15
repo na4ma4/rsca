@@ -9,7 +9,9 @@ type State interface {
 	// Close will close the underlying storage system or return an error.
 	Close() error
 	// DeactivateByStreamID sets the Active property on a member to false.
-	DeactivateByStreamID(streamID string) error
+	DeactivateByStreamID(string) error
+	// DeactivateByHostname sets the Active property on a member to false by host name.
+	DeactivateByHostname(string) error
 	// Walk will run a supplied function over each of the members in the storage.
 	Walk(walkFunc func(*api.Member) error) error
 	// GetMemberByHostname returns a member by their hostname.

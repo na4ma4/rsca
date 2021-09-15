@@ -194,3 +194,22 @@ func (d *Disk) DeactivateByStreamID(streamID string) error {
 
 	return nil
 }
+
+// DeactivateByHostname sets the Active property on a member to false.
+func (d *Disk) DeactivateByHostname(hostname string) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	var m Member
+
+	if err := d.db.One("ID", hostname, &m); err == nil {
+		m.Member.Active = false
+		m.StreamID = ""
+
+		if err := d.db.Save(&m); err != nil {
+			return fmt.Errorf("unable to deactivate by hostname: %w", err)
+		}
+	}
+
+	return nil
+}

@@ -42,6 +42,8 @@ func ConfigInit() {
 	viper.SetDefault("server.tick", "15s")
 	viper.SetDefault("server.cert-type", "Server")
 	viper.SetDefault("server.state-store", "/tmp/rsca-state.db")
+	viper.SetDefault("server.state-timeout", "120s")
+	viper.SetDefault("server.state-tick", "60s")
 
 	viper.SetDefault("watchdog.enabled", false)
 	viper.SetDefault("watchdog.tick", "30s")
