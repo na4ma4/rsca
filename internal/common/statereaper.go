@@ -29,10 +29,15 @@ func StateReaper(
 
 				expireState := []string{}
 
-				expireTime := ts.Add(cfg.GetDuration("server.state-timeout"))
+				expireTime := ts.Add(-1 * cfg.GetDuration("server.state-timeout")).UTC()
 
 				_ = st.Walk(func(in *api.Member) error {
-					if in != nil && in.LastSeen != nil && expireTime.After(in.LastSeen.AsTime()) {
+					if in != nil && in.LastSeen != nil && in.Active && !in.LastSeen.AsTime().After(expireTime) {
+						logger.Debug("adding host to inactive list",
+							zap.String("rsca.client.name", in.GetName()),
+							zap.Time("expireTime", expireTime),
+							zap.Time("lastseen", in.LastSeen.AsTime()),
+						)
 						expireState = append(expireState, in.GetName())
 					}
 
@@ -40,6 +45,7 @@ func StateReaper(
 				})
 
 				for k := range expireState {
+					logger.Info("deactivating host for inactivity", zap.String("rsca.client.name", expireState[k]))
 					if err := st.DeactivateByHostname(expireState[k]); err != nil {
 						logger.Error("unable to deactive member", zap.Error(err))
 					}
