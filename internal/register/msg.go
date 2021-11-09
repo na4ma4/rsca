@@ -93,7 +93,7 @@ func (msg *Message) UpdateInfoStat(ctx context.Context) {
 	msg.lock.Lock()
 	defer msg.lock.Unlock()
 
-	if is, err := api.InfoWithContext(context.Background(), time.Now()); err == nil {
+	if is, err := api.InfoWithContext(ctx, time.Now()); err == nil {
 		msg.member.InfoStat = is
 	}
 }

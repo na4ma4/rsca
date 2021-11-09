@@ -6,9 +6,11 @@ linters:
     - forbidigo
     - golint
     - interfacer
+    - ireturn
     - maligned
     - paralleltest
     - scopelint
+    - varnamelen
 
 issues:
   exclude-use-default: false
