@@ -15,6 +15,7 @@ func ConfigInit() {
 	viper.AddConfigPath("/etc/rsca")
 	viper.AddConfigPath("/usr/local/etc")
 	viper.AddConfigPath("/usr/local/rsca/etc")
+	viper.AddConfigPath("/opt/homebrew/etc")
 	viper.AddConfigPath("/etc/nsca")
 	viper.AddConfigPath("/etc/nagios")
 	viper.AddConfigPath(".")
