@@ -13,7 +13,7 @@ import (
 )
 
 // basicFunctions are the set of initial functions provided to every template.
-//nolint:gochecknoglobals // for reusability and mostly because it was copy/pasted from docker/cli
+//nolint:errchkjson,gochecknoglobals // for reusability and mostly because it was copy/pasted from docker/cli
 var basicFunctions = template.FuncMap{
 	"json": func(v interface{}) string {
 		buf := &bytes.Buffer{}
