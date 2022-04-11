@@ -39,6 +39,7 @@ jobs:
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v3.1.0
       with:
+        skip-cache: true
         version: latest
 
     - name: unit-test
