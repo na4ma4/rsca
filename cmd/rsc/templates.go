@@ -9,6 +9,8 @@ import (
 	"time"
 
 	ts "github.com/na4ma4/go-timestring"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -25,9 +27,9 @@ var basicFunctions = template.FuncMap{
 	},
 	"split":    strings.Split,
 	"join":     strings.Join,
-	"title":    strings.Title,
-	"lower":    strings.ToLower,
-	"upper":    strings.ToUpper,
+	"title":    cases.Title(language.English),
+	"lower":    cases.Lower(language.English),
+	"upper":    cases.Upper(language.English),
 	"pad":      padWithSpace,
 	"padlen":   padToLength,
 	"padmax":   padToMaxLength,
