@@ -28,7 +28,7 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ^1
       id: go
@@ -39,7 +39,7 @@ jobs:
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v3.1.0
       with:
-        version: v1.44
+        version: latest
 
     - name: unit-test
       run: make test
@@ -72,7 +72,7 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ^1
       id: go
