@@ -140,7 +140,11 @@ func stringBool(source interface{}, yes, no string) string {
 
 		return "nil"
 	case bool:
-		return stringBool(val, yes, no)
+		if val {
+			return yes
+		}
+
+		return no
 	default:
 		return fmt.Sprintf("%s", val)
 	}
