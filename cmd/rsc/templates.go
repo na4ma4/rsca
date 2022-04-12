@@ -15,50 +15,63 @@ import (
 )
 
 // basicFunctions are the set of initial functions provided to every template.
-//nolint:errchkjson,gochecknoglobals // for reusability and mostly because it was copy/pasted from docker/cli
-var basicFunctions = template.FuncMap{
-	"json": func(v interface{}) string {
-		buf := &bytes.Buffer{}
-		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(false)
-		_ = enc.Encode(v)
-		// Remove the trailing new line added by the encoder
-		return strings.TrimSpace(buf.String())
-	},
-	"split":    strings.Split,
-	"join":     strings.Join,
-	"title":    cases.Title(language.English),
-	"lower":    cases.Lower(language.English),
-	"upper":    cases.Upper(language.English),
-	"pad":      padWithSpace,
-	"padlen":   padToLength,
-	"padmax":   padToMaxLength,
-	"truncate": truncateWithLength,
-	"tf":       stringTrueFalse,
-	"yn":       stringYesNo,
-	"t":        stringTab,
-	"age":      humanAgeFormat,
-	"time":     timeFormat,
-	"date":     dateFormat,
+func basicFunctions(extra ...template.FuncMap) template.FuncMap {
+	o := template.FuncMap{
+		"json": func(v interface{}) string {
+			buf := &bytes.Buffer{}
+			enc := json.NewEncoder(buf)
+			enc.SetEscapeHTML(false)
+			_ = enc.Encode(v) //nolint:errchkjson // template function
+			// Remove the trailing new line added by the encoder
+			return strings.TrimSpace(buf.String())
+		},
+		"split":    strings.Split,
+		"join":     strings.Join,
+		"title":    cases.Title(language.English).String,
+		"lower":    cases.Lower(language.English).String,
+		"upper":    cases.Upper(language.English).String,
+		"pad":      padWithSpace,
+		"padlen":   padToLength,
+		"padmax":   padToMaxLength,
+		"truncate": truncateWithLength,
+		"tf":       stringTrueFalse,
+		"yn":       stringYesNo,
+		"t":        stringTab,
+		"age":      humanAgeFormat,
+		"time":     timeFormat,
+		"date":     dateFormat,
+	}
+
+	if len(extra) > 0 {
+		for _, add := range extra {
+			for k, v := range add {
+				o[k] = v
+			}
+		}
+	}
+
+	return o
 }
 
 // padToLength adds whitespace to pad to the supplied length.
-func padToMaxLength(source string) string {
+func padToMaxLength(source interface{}) string {
 	return fmt.Sprintf(fmt.Sprintf("%%-%ds", 0), source)
 }
 
 // padToLength adds whitespace to pad to the supplied length.
-func padToLength(source string, prefix int) string {
+func padToLength(source interface{}, prefix int) string {
 	return fmt.Sprintf(fmt.Sprintf("%%-%ds", prefix), source)
 }
 
 // padWithSpace adds whitespace to the input if the input is non-empty.
-func padWithSpace(source string, prefix, suffix int) string {
-	if source == "" {
-		return source
+func padWithSpace(source interface{}, prefix, suffix int) string {
+	src := fmt.Sprintf("%s", source)
+
+	if src == "" {
+		return src
 	}
 
-	return strings.Repeat(" ", prefix) + source + strings.Repeat(" ", suffix)
+	return strings.Repeat(" ", prefix) + src + strings.Repeat(" ", suffix)
 }
 
 // humanAgeFormat returns a duration in a human readable format.
@@ -118,22 +131,29 @@ func dateFormat(source interface{}) string {
 	}
 }
 
-// stringTrueFalse returns "true" or "false" for boolean input.
-func stringTrueFalse(source bool) string {
-	if source {
-		return "true"
-	}
+func stringBool(source interface{}, yes, no string) string {
+	switch val := source.(type) {
+	case *bool:
+		if val != nil {
+			return stringBool(*val, yes, no)
+		}
 
-	return "false"
+		return "nil"
+	case bool:
+		return stringBool(val, yes, no)
+	default:
+		return fmt.Sprintf("%s", val)
+	}
+}
+
+// stringTrueFalse returns "true" or "false" for boolean input.
+func stringTrueFalse(source interface{}) string {
+	return stringBool(source, "true", "false")
 }
 
 // stringYesNo returns "yes" or "no" for boolean input.
 func stringYesNo(source bool) string {
-	if source {
-		return "yes"
-	}
-
-	return "no"
+	return stringBool(source, "yes", "no")
 }
 
 // stringTab returns a tab character.
@@ -142,10 +162,12 @@ func stringTab() string {
 }
 
 // truncateWithLength truncates the source string up to the length provided by the input.
-func truncateWithLength(source string, length int) string {
-	if len(source) < length {
-		return source
+func truncateWithLength(source interface{}, length int) string {
+	src := fmt.Sprintf("%s", source)
+
+	if len(src) < length {
+		return src
 	}
 
-	return source[:length]
+	return src[:length]
 }

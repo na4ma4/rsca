@@ -62,7 +62,7 @@ func hostListCommand(cmd *cobra.Command, args []string) {
 		viper.Set("host.list.format", fmt.Sprintf("%s\n", viper.GetString("host.list.format")))
 	}
 
-	tmpl, err := template.New("").Funcs(basicFunctions).Parse(viper.GetString("host.list.format"))
+	tmpl, err := template.New("").Funcs(basicFunctions()).Parse(viper.GetString("host.list.format"))
 	if err != nil {
 		logger.Fatal("unable to load template engine", zap.Error(err))
 	}
