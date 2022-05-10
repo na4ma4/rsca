@@ -36,12 +36,14 @@ type Info struct {
 
 // runCmd runs a supplied command and returns the exitcode.
 //nolint:nestif // it might be "deeply nested", but it's readable and confines this code to this function.
-func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int, cmdErr error) {
-	cmdErr = cmd.Run()
-	if cmdErr != nil {
+func (i *Info) runCmd(cmd *exec.Cmd) (int, error) {
+	exitCode := 0
+	err := cmd.Run()
+
+	if err != nil {
 		// try to get the exit code
 		var exitError *exec.ExitError
-		if errors.As(cmdErr, &exitError) {
+		if errors.As(err, &exitError) {
 			if ws, ok := exitError.Sys().(syscall.WaitStatus); ok {
 				exitCode = ws.ExitStatus()
 			}
@@ -50,24 +52,24 @@ func (i *Info) runCmd(cmd *exec.Cmd) (exitCode int, cmdErr error) {
 			// exit code could not be get, and stderr will be empty string very likely, so we use
 			// the default fail code, and format err to string and set to stderr
 			exitCode = 3
-			cmdErr = fmt.Errorf("check failed to run: %w", cmdErr)
+			err = fmt.Errorf("check failed to run: %w", err)
 		}
 	} else if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 		// success, exitCode should be 0 if go is ok
 		exitCode = ws.ExitStatus()
 	}
 
-	return
+	return exitCode, err
 }
 
 // splitCmd uses `shellquote` on non windows platforms.
-func (i *Info) splitCmd() (o []string) {
+func (i *Info) splitCmd() []string {
 	o, err := shellquote.Split(i.Command)
 	if err != nil {
 		o = strings.Split(i.Command, " ")
 	}
 
-	return
+	return o
 }
 
 // wrapCmd [!windows] uses syscall.Kill to kill process group for check.

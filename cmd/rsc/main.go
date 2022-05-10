@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/na4ma4/config"
-	"github.com/na4ma4/rsca/internal/certs"
+	"github.com/na4ma4/go-certprovider"
 	"github.com/na4ma4/rsca/internal/mainconfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -83,9 +83,9 @@ func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.Cl
 		zap.String("dns-name", serverHostName),
 	)
 
-	cp, err := certs.NewFileCertificateProvider(
+	cp, err := certprovider.NewFileProvider(
 		cfg.GetString("admin.cert-dir"),
-		certs.CertProviderFromString(cfg.GetString("admin.cert-type")),
+		certprovider.CertProvider(),
 	)
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))

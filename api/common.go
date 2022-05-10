@@ -11,10 +11,10 @@ import (
 )
 
 // InfoWithContext calls shirou/gopsutil InfoWithContext and returns a native InfoStat for protobuf.
-func InfoWithContext(ctx context.Context, ts time.Time) (o *InfoStat, err error) {
+func InfoWithContext(ctx context.Context, ts time.Time) (*InfoStat, error) {
 	is, err := host.InfoWithContext(ctx)
 	if err == nil {
-		o = &InfoStat{
+		o := &InfoStat{
 			Hostname:        is.Hostname,
 			Uptime:          is.Uptime,
 			BootTime:        is.BootTime,

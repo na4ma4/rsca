@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-certprovider"
 	"github.com/na4ma4/rsca/api"
-	"github.com/na4ma4/rsca/internal/certs"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/mainconfig"
 	"github.com/na4ma4/rsca/internal/state"
@@ -60,9 +60,9 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	cp, err := certs.NewFileCertificateProvider(
+	cp, err := certprovider.NewFileProvider(
 		cfg.GetString("server.cert-dir"),
-		certs.CertProviderFromString(cfg.GetString("server.cert-type")),
+		certprovider.ServerProvider(),
 	)
 	if err != nil {
 		logger.Fatal("failed to get certificates", zap.Error(err))

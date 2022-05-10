@@ -157,12 +157,14 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAl
 	}, nil
 }
 
-func (s *Server) streamIDsToHostnames(streamIDs []string) (hostNames []string) {
+func (s *Server) streamIDsToHostnames(streamIDs []string) []string {
+	hostNames := []string{}
+
 	for _, streamID := range streamIDs {
 		hostNames = append(hostNames, s.streamIDToHostname(streamID))
 	}
 
-	return
+	return hostNames
 }
 
 // RemoveHost removes a specified list of hosts from the server.

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-certprovider"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/client"
-	"github.com/na4ma4/rsca/internal/certs"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/mainconfig"
@@ -70,9 +70,9 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	logger.Debug("Connecting to API", zap.String("bind", grpcServer(cfg.GetString("client.server"))),
 		zap.String("dns-name", serverHostName))
 
-	cp, err := certs.NewFileCertificateProvider(
+	cp, err := certprovider.NewFileProvider(
 		cfg.GetString("client.cert-dir"),
-		certs.CertProviderFromString(cfg.GetString("client.cert-type")),
+		certprovider.ClientProvider(),
 	)
 	checkErrFatal(err, logger, "failed to get certificates")
 
