@@ -4,87 +4,18 @@ on:
   pull_request:
   push:
     branches:
-      - '*'
+    - '*'
     tags:
-      - 'v*'
+    - 'v*'
 
 jobs:
-  unit-test:
-    name: unit-test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Go Cache
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-          artifacts/bin
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: ^1
-      id: go
-
-    - name: Set up go env
-      run: export PATH=${PATH}:`go env GOPATH`/bin
-
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        skip-cache: true
-        version: latest
-
-    - name: unit-test
-      run: make test
-
-    - name: ci
-      run: make ci
-
+  unittest:
+    uses: na4ma4/actions/.github/workflows/unit-test.yml@v1
 
   goreleaser:
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
-      - unit-test
-    name: goreleaser
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Go Cache
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-          artifacts/bin
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: ^1
-      id: go
-
-    - name: Set up go env
-      run: export PATH=${PATH}:`go env GOPATH`/bin
-
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
+      - unittest
+    uses: na4ma4/actions/.github/workflows/goreleaser.yml@v1
+    secrets:
+      token: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
