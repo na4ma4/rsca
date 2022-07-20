@@ -1,3 +1,8 @@
+run:
+  # Timeout for analysis, e.g. 30s, 5m.
+  # Default: 1m
+  timeout: 3m
+  
 linters:
   enable-all: true
   exclude-use-default: false
