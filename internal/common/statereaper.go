@@ -11,6 +11,7 @@ import (
 )
 
 // StateReaper periodically checks the state store and deactivates old entries.
+//nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func StateReaper(
 	ctx context.Context,
 	cfg config.Conf,

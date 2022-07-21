@@ -55,7 +55,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfDFromViper(viper.GetViper(), "/etc/nagios/rsca.d/", "rsca")
 
 	logger, _ := cfg.ZapConfig().Build()
-	defer logger.Sync() //nolint:errcheck
+	defer logger.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

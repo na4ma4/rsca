@@ -50,7 +50,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := cfg.ZapConfig().Build()
-	defer logger.Sync() //nolint:errcheck
+	defer logger.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -92,7 +92,7 @@ func mainCommand(cmd *cobra.Command, args []string) {
 	eg.Go(sapi.Run(ctx, cfg))
 	eg.Go(common.StateReaper(ctx, cfg, logger, st))
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
-	eg.Go(func() error { return gc.Serve(lis) }) //nolint:wrapcheck
+	eg.Go(func() error { return gc.Serve(lis) })
 
 	if cfg.GetBool("metrics.enabled") {
 		go func() {

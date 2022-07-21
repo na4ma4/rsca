@@ -46,7 +46,6 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 }
 
 // GetCheckFromViper returns a check with the specified name from the config file.
-//nolint:cyclop // I'd rather keep all this code together than split it out unnecessarily.
 func GetCheckFromViper(cfg config.Conf, logger *zap.Logger, name, hostName string) *Info {
 	check := &Info{
 		Name:     cfg.GetString(fmt.Sprintf("check.%s.name", name)),

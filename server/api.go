@@ -132,7 +132,7 @@ func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerI
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &api.TriggerInfoResponse{
@@ -149,7 +149,7 @@ func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAl
 	if err := s.Send(msg); err != nil {
 		s.logger.Error("send returned error", zap.Error(err))
 
-		return nil, status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &api.TriggerAllResponse{
@@ -177,8 +177,8 @@ func (s *Server) RemoveHost(ctx context.Context, in *api.RemoveHostRequest) (*ap
 
 	for _, hostname := range in.GetNames() {
 		if v, ok := s.state.GetMemberByHostname(hostname); ok {
-			if streamID, ok := s.state.GetStreamIDByMember(v); ok {
-				if st, ok := s.streams[streamID]; ok && st.TriggerClose != nil {
+			if streamID, streamIDOK := s.state.GetStreamIDByMember(v); streamIDOK {
+				if st, streamOK := s.streams[streamID]; streamOK && st.TriggerClose != nil {
 					s.logger.Debug("remove host, closing channel", zap.String("target", hostname), zap.String("streamID", streamID))
 					st.TriggerClose()
 				}
@@ -187,7 +187,7 @@ func (s *Server) RemoveHost(ctx context.Context, in *api.RemoveHostRequest) (*ap
 			if err := s.state.Delete(v); err != nil {
 				s.logger.Debug("unable to remove host from state storage", zap.String("target", hostname), zap.Error(err))
 
-				return o, status.Error(codes.Internal, fmt.Sprintf("unable to delete host: %s", err)) //nolint:wrapcheck
+				return o, status.Error(codes.Internal, fmt.Sprintf("unable to delete host: %s", err))
 			}
 
 			s.logger.Debug("host removed from storage", zap.String("target", hostname))
@@ -210,12 +210,12 @@ func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) err
 
 	if err := s.state.Walk(func(m *api.Member) error {
 		if err := stream.Send(m); err != nil {
-			return err //nolint:wrapcheck // goes into status.Error
+			return err
 		}
 
 		return nil
 	}); err != nil {
-		return status.Error(codes.Internal, err.Error()) //nolint:wrapcheck
+		return status.Error(codes.Internal, err.Error())
 	}
 
 	return nil
@@ -284,7 +284,7 @@ func (s *Server) processPipeMessages(streamID string, stream api.RSCA_PipeServer
 }
 
 // processPipe is the main message handler.
-//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
+//nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func (s *Server) processPipe(
 	ctx context.Context,
 	streamID string,
@@ -481,7 +481,7 @@ func (s *Server) compareSlices(s1, s2 []string) bool {
 }
 
 // streamIDsFromRecipient processes a recipient (*api.Members) and returns a list of streamIDs.
-//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
+//nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 	s.lock.Lock()
 	defer s.lock.Unlock()

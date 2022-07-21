@@ -44,7 +44,7 @@ func hostInfoCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()
-	defer logger.Sync() //nolint:errcheck
+	defer logger.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

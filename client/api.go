@@ -146,7 +146,7 @@ func (c *Client) wrapEventMessage(in *api.EventMessage) *api.Message {
 }
 
 // RunEvents runs as a go routine that processes the response channel and creates messages to add to the outbox.
-//nolint:cyclop // don't see a way to make this much more simpler without making it less readable.
+//nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func (c *Client) RunEvents(
 	ctx context.Context,
 	cancel context.CancelFunc,

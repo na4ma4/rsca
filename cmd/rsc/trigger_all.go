@@ -45,11 +45,12 @@ func init() {
 
 var errTriggerFailed = errors.New("trigger failed")
 
+//nolint:forbidigo // Display Function
 func triggerAllCommand(cmd *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()
-	defer logger.Sync() //nolint:errcheck
+	defer logger.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -90,6 +91,7 @@ func triggerAllCommand(cmd *cobra.Command, args []string) {
 	fmt.Println("Trigger message failed")
 }
 
+//nolint:forbidigo // Display Function
 func triggerAllCommandInfo(r *api.TriggerInfoResponse) error {
 	if r != nil {
 		fmt.Printf("Trigger message sent to %d hosts\n", len(r.GetNames()))
@@ -104,6 +106,7 @@ func triggerAllCommandInfo(r *api.TriggerInfoResponse) error {
 	return errTriggerFailed
 }
 
+//nolint:forbidigo // Display Function
 func triggerAllCommandServices(r *api.TriggerAllResponse) error {
 	if r != nil {
 		fmt.Printf("Trigger message sent to %d hosts\n", len(r.GetNames()))
