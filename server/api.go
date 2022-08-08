@@ -284,6 +284,7 @@ func (s *Server) processPipeMessages(streamID string, stream api.RSCA_PipeServer
 }
 
 // processPipe is the main message handler.
+//
 //nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func (s *Server) processPipe(
 	ctx context.Context,
@@ -481,6 +482,7 @@ func (s *Server) compareSlices(s1, s2 []string) bool {
 }
 
 // streamIDsFromRecipient processes a recipient (*api.Members) and returns a list of streamIDs.
+//
 //nolint:gocognit // I don't see an easy way to make this less complex without making it less maintainable.
 func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 	s.lock.Lock()

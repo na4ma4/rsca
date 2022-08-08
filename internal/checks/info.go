@@ -35,6 +35,7 @@ type Info struct {
 }
 
 // runCmd runs a supplied command and returns the exitcode.
+//
 //nolint:nestif // it might be "deeply nested", but it's readable and confines this code to this function.
 func (i *Info) runCmd(cmd *exec.Cmd) (int, error) {
 	exitCode := 0
