@@ -52,6 +52,10 @@ func ConfigInit() {
 
 	viper.SetDefault("metrics.enabled", true)
 	viper.SetDefault("metrics.listen", "localhost:2112")
+	viper.SetDefault("metrics.timeout.read", "1h")
+	viper.SetDefault("metrics.timeout.read-header", "10s")
+	viper.SetDefault("metrics.timeout.write", "1m")
+	viper.SetDefault("metrics.timeout.idle", "10s")
 
 	_ = viper.ReadInConfig()
 }

@@ -98,7 +98,15 @@ func mainCommand(cmd *cobra.Command, args []string) {
 		go func() {
 			http.Handle("/metrics", promhttp.Handler())
 
-			if err := http.ListenAndServe(cfg.GetString("metrics.listen"), nil); err != nil {
+			srv := http.Server{
+				Addr:              cfg.GetString("metrics.listen"),
+				ReadTimeout:       cfg.GetDuration("metrics.timeout.read"),
+				ReadHeaderTimeout: cfg.GetDuration("metrics.timeout.read-header"),
+				WriteTimeout:      cfg.GetDuration("metrics.timeout.write"),
+				IdleTimeout:       cfg.GetDuration("metrics.timeout.idle"),
+			}
+
+			if err := srv.ListenAndServe(); err != nil {
 				logger.Debug("metrics.Listen context done", zap.Error(ctx.Err()))
 
 				cancel()
