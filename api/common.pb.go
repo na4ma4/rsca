@@ -729,6 +729,7 @@ type Message struct {
 
 	Envelope *Envelope `protobuf:"bytes,1,opt,name=envelope,proto3" json:"envelope,omitempty"`
 	// Types that are assignable to Message:
+	//
 	//	*Message_RegisterMessage
 	//	*Message_PingMessage
 	//	*Message_PongMessage
