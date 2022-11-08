@@ -13,7 +13,7 @@ require (
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.24.0
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.13.1
 	github.com/shirou/gopsutil/v3 v3.22.9
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
