@@ -12,7 +12,7 @@ require (
 	github.com/na4ma4/permbits v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.24.2
+	github.com/onsi/gomega v1.25.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/shirou/gopsutil/v3 v3.22.12
 	github.com/spf13/cobra v1.6.1
@@ -55,8 +55,8 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
