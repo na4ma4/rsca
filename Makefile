@@ -1,6 +1,6 @@
-GO_MATRIX += darwin/amd64
-GO_MATRIX += linux/amd64
-GO_MATRIX += windows/amd64
+GO_MATRIX ?= darwin/amd64 \
+  linux/amd64 \
+  windows/amd64
 
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_HASH ?= $(shell git show -s --format=%h)
