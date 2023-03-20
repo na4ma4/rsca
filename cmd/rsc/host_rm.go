@@ -25,7 +25,7 @@ func init() {
 }
 
 //nolint:forbidigo // Display Function
-func hostRemoveCommand(cmd *cobra.Command, args []string) {
+func hostRemoveCommand(_ *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()

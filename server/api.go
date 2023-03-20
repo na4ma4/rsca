@@ -120,7 +120,7 @@ func NewServer(logger *zap.Logger, st state.State) *Server {
 }
 
 // TriggerInfo triggers an information update from the host (repeat-registration).
-func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerInfoResponse, error) {
+func (s *Server) TriggerInfo(_ context.Context, m *api.Members) (*api.TriggerInfoResponse, error) {
 	msg := &api.Message{
 		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
 		Message: &api.Message_RepeatRegistrationMessage{
@@ -141,7 +141,7 @@ func (s *Server) TriggerInfo(ctx context.Context, m *api.Members) (*api.TriggerI
 }
 
 // TriggerAll triggers all the services on a matching host.
-func (s *Server) TriggerAll(ctx context.Context, m *api.Members) (*api.TriggerAllResponse, error) {
+func (s *Server) TriggerAll(_ context.Context, m *api.Members) (*api.TriggerAllResponse, error) {
 	msg := &api.Message{
 		Envelope: &api.Envelope{Sender: &api.Member{Id: "master"}, Recipient: m},
 		Message:  &api.Message_TriggerAllMessage{TriggerAllMessage: &api.TriggerAllMessage{Id: uuid.New().String()}},
@@ -168,7 +168,7 @@ func (s *Server) streamIDsToHostnames(streamIDs []string) []string {
 }
 
 // RemoveHost removes a specified list of hosts from the server.
-func (s *Server) RemoveHost(ctx context.Context, in *api.RemoveHostRequest) (*api.RemoveHostResponse, error) {
+func (s *Server) RemoveHost(_ context.Context, in *api.RemoveHostRequest) (*api.RemoveHostResponse, error) {
 	s.logger.Debug("RemoveHost()", zap.Strings("targets", in.GetNames()))
 
 	o := &api.RemoveHostResponse{
@@ -204,16 +204,12 @@ func (s *Server) RemoveHost(ctx context.Context, in *api.RemoveHostRequest) (*ap
 }
 
 // ListHosts returns a list of hosts currently registered with the server.
-func (s *Server) ListHosts(req *api.Empty, stream api.Admin_ListHostsServer) error {
+func (s *Server) ListHosts(_ *api.Empty, stream api.Admin_ListHostsServer) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if err := s.state.Walk(func(m *api.Member) error {
-		if err := stream.Send(m); err != nil {
-			return err
-		}
-
-		return nil
+		return stream.Send(m)
 	}); err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}

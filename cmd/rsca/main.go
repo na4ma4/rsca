@@ -51,7 +51,7 @@ func main() {
 	_ = rootCmd.Execute()
 }
 
-func mainCommand(cmd *cobra.Command, args []string) {
+func mainCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfDFromViper(viper.GetViper(), "/etc/nagios/rsca.d/", "rsca")
 
 	logger, _ := cfg.ZapConfig().Build()

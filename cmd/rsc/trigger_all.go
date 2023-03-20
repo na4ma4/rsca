@@ -46,7 +46,7 @@ func init() {
 var errTriggerFailed = errors.New("trigger failed")
 
 //nolint:forbidigo // Display Function
-func triggerAllCommand(cmd *cobra.Command, args []string) {
+func triggerAllCommand(_ *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()

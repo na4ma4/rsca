@@ -36,7 +36,7 @@ func init() {
 	cmdHost.AddCommand(cmdHostList)
 }
 
-func hostListCommand(cmd *cobra.Command, args []string) {
+func hostListCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
 
 	logger, _ := zapConfig().Build()

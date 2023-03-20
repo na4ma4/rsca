@@ -161,7 +161,7 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 func RunChecks(
 	ctx context.Context,
 	cfg config.Conf,
-	logger *zap.Logger,
+	_ *zap.Logger,
 	checkList []*Info,
 	respChan chan *api.EventMessage,
 ) func() error {
