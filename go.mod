@@ -12,7 +12,7 @@ require (
 	github.com/na4ma4/permbits v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.7
+	github.com/onsi/gomega v1.27.8
 	github.com/prometheus/client_golang v1.15.1
 	github.com/shirou/gopsutil/v3 v3.23.5
 	github.com/spf13/cobra v1.7.0
