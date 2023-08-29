@@ -153,9 +153,9 @@ func (d *Disk) Delete(in *api.Member) error {
 
 	var m Member
 
-	if err := d.db.One("ID", in.GetName(), &m); err == nil {
-		if err := d.db.DeleteStruct(&m); err != nil {
-			return fmt.Errorf("unable to delete member: %w", err)
+	if lookupErr := d.db.One("ID", in.GetName(), &m); lookupErr == nil {
+		if deleteErr := d.db.DeleteStruct(&m); deleteErr != nil {
+			return fmt.Errorf("unable to delete member: %w", deleteErr)
 		}
 	}
 
@@ -183,12 +183,12 @@ func (d *Disk) DeactivateByStreamID(streamID string) error {
 
 	var m Member
 
-	if err := d.db.One("StreamID", streamID, &m); err == nil {
+	if lookupErr := d.db.One("StreamID", streamID, &m); lookupErr == nil {
 		m.Member.Active = false
 		m.StreamID = ""
 
-		if err := d.db.Save(&m); err != nil {
-			return fmt.Errorf("unable to deactivate by streamID: %w", err)
+		if saveErr := d.db.Save(&m); saveErr != nil {
+			return fmt.Errorf("unable to deactivate by streamID: %w", saveErr)
 		}
 	}
 
@@ -202,12 +202,12 @@ func (d *Disk) DeactivateByHostname(hostname string) error {
 
 	var m Member
 
-	if err := d.db.One("ID", hostname, &m); err == nil {
+	if lookupErr := d.db.One("ID", hostname, &m); lookupErr == nil {
 		m.Member.Active = false
 		m.StreamID = ""
 
-		if err := d.db.Save(&m); err != nil {
-			return fmt.Errorf("unable to deactivate by hostname: %w", err)
+		if saveErr := d.db.Save(&m); saveErr != nil {
+			return fmt.Errorf("unable to deactivate by hostname: %w", saveErr)
 		}
 	}
 

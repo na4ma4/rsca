@@ -70,20 +70,20 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	logger.Debug("Connecting to API", zap.String("bind", grpcServer(cfg.GetString("client.server"))),
 		zap.String("dns-name", serverHostName))
 
-	cp, err := certprovider.NewFileProvider(
+	cp, cpErr := certprovider.NewFileProvider(
 		cfg.GetString("client.cert-dir"),
 		certprovider.ClientProvider(),
 	)
-	checkErrFatal(err, logger, "failed to get certificates")
+	checkErrFatal(cpErr, logger, "failed to get certificates")
 
-	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
-	checkErrFatal(err, logger, "failed to connect to server")
+	gc, gcErr := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
+	checkErrFatal(gcErr, logger, "failed to connect to server")
 
 	rc := api.NewRSCAClient(gc)
 	respChan := make(chan *api.EventMessage)
 
-	stream, err := rc.Pipe(ctx)
-	checkErrFatal(err, logger, "unable to create stream")
+	stream, streamErr := rc.Pipe(ctx)
+	checkErrFatal(streamErr, logger, "unable to create stream")
 
 	hostName := getHostname(cfg)
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
@@ -102,7 +102,7 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(cl.RunEvents(ctx, cancel, regmsg, respChan))
 
-	if err = stream.Send(streamMsg); err != nil {
+	if err := stream.Send(streamMsg); err != nil {
 		logger.Fatal("unable to register with server", zap.Error(err))
 	}
 

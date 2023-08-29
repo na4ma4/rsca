@@ -55,24 +55,24 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lis, err := net.Listen("tcp", cfg.GetString("server.listen"))
-	if err != nil {
-		logger.Fatal("failed to listen", zap.Error(err))
+	lis, listenErr := net.Listen("tcp", cfg.GetString("server.listen"))
+	if listenErr != nil {
+		logger.Fatal("failed to listen", zap.Error(listenErr))
 	}
 
-	cp, err := certprovider.NewFileProvider(
+	cp, cpErr := certprovider.NewFileProvider(
 		cfg.GetString("server.cert-dir"),
 		certprovider.ServerProvider(),
 	)
-	if err != nil {
-		logger.Fatal("failed to get certificates", zap.Error(err))
+	if cpErr != nil {
+		logger.Fatal("failed to get certificates", zap.Error(cpErr))
 	}
 
 	logger.Info("server listening", zap.String("bind", viper.GetString("server.listen")))
 
-	st, err := state.NewDiskState(logger, cfg.GetString("server.state-store"))
-	if err != nil {
-		logger.Fatal("failed to create disk state storage", zap.Error(err))
+	st, stateErr := state.NewDiskState(logger, cfg.GetString("server.state-store"))
+	if stateErr != nil {
+		logger.Fatal("failed to create disk state storage", zap.Error(stateErr))
 	}
 
 	defer st.Close()
