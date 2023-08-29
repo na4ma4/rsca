@@ -69,18 +69,18 @@ func triggerAllCommand(_ *cobra.Command, args []string) {
 	}
 
 	if cfg.GetBool("trigger.all.info") { //nolint:nestif // removing nesting harms readability.
-		r, err := cc.TriggerInfo(ctx, ms)
-		if err != nil {
-			logger.Fatal("unable to trigger all services", zap.Error(err))
+		r, reqErr := cc.TriggerInfo(ctx, ms)
+		if reqErr != nil {
+			logger.Fatal("unable to trigger all services", zap.Error(reqErr))
 		}
 
 		if err := triggerAllCommandInfo(r); err == nil {
 			return
 		}
 	} else {
-		r, err := cc.TriggerAll(ctx, ms)
-		if err != nil {
-			logger.Fatal("unable to trigger all services", zap.Error(err))
+		r, reqErr := cc.TriggerAll(ctx, ms)
+		if reqErr != nil {
+			logger.Fatal("unable to trigger all services", zap.Error(reqErr))
 		}
 
 		if err := triggerAllCommandServices(r); err == nil {
