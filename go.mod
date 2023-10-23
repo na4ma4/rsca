@@ -12,7 +12,7 @@ require (
 	github.com/na4ma4/permbits v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.28.0
+	github.com/onsi/gomega v1.28.1
 	github.com/prometheus/client_golang v1.17.0
 	github.com/shirou/gopsutil/v3 v3.23.9
 	github.com/spf13/cobra v1.7.0
@@ -31,7 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20230110061619-bbe2e5e100de // indirect
