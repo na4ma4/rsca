@@ -16,7 +16,7 @@ GENERATED_FILES += artifacts/certs/client-key.pem
 GENERATED_FILES += artifacts/certs/cert.pem
 GENERATED_FILES += artifacts/certs/key.pem
 
-GO_TEST_REQ += test/test.cmd
+GO_TEST_REQ += testdata/test.cmd
 
 -include .makefiles/Makefile
 -include .makefiles/pkg/protobuf/v2/Makefile
@@ -72,7 +72,7 @@ artifacts/protobuf/args/go.jq: artifacts/protobuf/args/go
 # Test
 ######################
 
-test/test.cmd:
+testdata/test.cmd:
 	ln -s /dev/null "$(@)"
 
 

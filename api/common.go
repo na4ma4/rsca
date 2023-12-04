@@ -51,24 +51,24 @@ func (x *Member) isMatchWildcardSuffix(query string) bool {
 //
 // Query strings can start or end in a * or % to indicate wildcard matching.
 func (x *Member) IsMatch(query string) bool {
-	if strings.EqualFold(query, x.Id) || strings.EqualFold(query, x.Name) {
+	if strings.EqualFold(query, x.GetId()) || strings.EqualFold(query, x.GetName()) {
 		return true
 	}
 
 	if x.isMatchWildcardSuffix(query) {
-		if strings.HasPrefix(x.Name, query[:len(query)-1]) {
+		if strings.HasPrefix(x.GetName(), query[:len(query)-1]) {
 			return true
 		}
 	}
 
 	if x.isMatchWildcardPrefix(query) {
-		if strings.HasSuffix(x.Name, query[1:]) {
+		if strings.HasSuffix(x.GetName(), query[1:]) {
 			return true
 		}
 	}
 
 	if x.isMatchWildcardPrefix(query) && x.isMatchWildcardSuffix(query) {
-		if strings.Contains(x.Name, query[1:len(query)-1]) {
+		if strings.Contains(x.GetName(), query[1:len(query)-1]) {
 			return true
 		}
 	}

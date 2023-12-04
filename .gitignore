@@ -1,5 +1,5 @@
 /.makefiles
 /artifacts
 /.vscode
-test/test.cmd
+testdata/test.cmd
 /dist

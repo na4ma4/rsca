@@ -28,7 +28,7 @@ This can be run on any host with network access to the `rscad` server.
 This should be run on the server to check, it runs the checks in the config file and sends them to `rscad` on schedule.
 
 Copy [rsca.service](systemd/client/rsca.service) to `/etc/systemd/system/rsca.service`.
-Copy [rsca.toml](test/rsca.toml) to `/etc/nagios/rsca.toml`.
+Copy [rsca.toml](testdata/rsca.toml) to `/etc/nagios/rsca.toml`.
 
 ### rscad service
 

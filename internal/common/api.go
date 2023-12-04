@@ -26,7 +26,7 @@ func ProcessPingMessage(
 			Sender: &api.Member{
 				Name: hostName,
 			},
-			Recipient: api.RecipientBySender(in.Envelope.Sender),
+			Recipient: api.RecipientBySender(in.GetEnvelope().GetSender()),
 		},
 		Message: &api.Message_PongMessage{
 			PongMessage: &api.PongMessage{
@@ -56,7 +56,7 @@ func GeneratePingMessage(
 			Sender: &api.Member{
 				Name: hostName,
 			},
-			Recipient: api.RecipientBySender(in.Envelope.Sender),
+			Recipient: api.RecipientBySender(in.GetEnvelope().GetSender()),
 		},
 		Message: &api.Message_PongMessage{
 			PongMessage: &api.PongMessage{

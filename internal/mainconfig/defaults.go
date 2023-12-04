@@ -9,7 +9,7 @@ func ConfigInit() {
 	viper.SetConfigName("rsca")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath("./artifacts")
-	viper.AddConfigPath("./test")
+	viper.AddConfigPath("./testdata")
 	viper.AddConfigPath("$HOME/.rsca")
 	viper.AddConfigPath("$HOME/.config")
 	viper.AddConfigPath("/run/secrets")
