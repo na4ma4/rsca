@@ -169,8 +169,8 @@ func (c *Client) RunEvents(
 				}
 			case in, ok := <-c.inbox:
 				if ok {
-					if in != nil && in.Message != nil {
-						switch msg := in.Message.(type) {
+					if in != nil && in.GetMessage() != nil {
+						switch msg := in.GetMessage().(type) {
 						case *api.Message_PingMessage:
 							go func() {
 								c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)

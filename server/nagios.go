@@ -17,30 +17,30 @@ import (
 var ErrUnknownMessageType = errors.New("unknown message type")
 
 func writeCheckResponse(logger *zap.Logger, msg *api.EventMessage) error {
-	status := int(msg.Status)
+	status := int32(msg.GetStatus())
 
-	switch msg.Type {
+	switch msg.GetType() {
 	case api.CheckType_HOST:
 		o := fmt.Sprintf(
 			"PROCESS_HOST_CHECK_RESULT;%s;%d;%s",
-			msg.Hostname,
+			msg.GetHostname(),
 			status,
-			msg.Output,
+			msg.GetOutput(),
 		)
 
 		return writeCommand(logger, o)
 	case api.CheckType_SERVICE:
 		o := fmt.Sprintf(
 			"PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s",
-			msg.Hostname,
-			msg.Check,
+			msg.GetHostname(),
+			msg.GetCheck(),
 			status,
-			msg.Output,
+			msg.GetOutput(),
 		)
 
 		return writeCommand(logger, o)
 	default:
-		return fmt.Errorf("%w: %d", ErrUnknownMessageType, msg.Type)
+		return fmt.Errorf("%w: %d", ErrUnknownMessageType, msg.GetType())
 	}
 }
 

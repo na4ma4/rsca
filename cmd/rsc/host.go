@@ -26,31 +26,31 @@ func init() {
 }
 
 func fillInAPIMember(in *api.Member) {
-	if in.Service == nil {
+	if in.GetService() == nil {
 		in.Service = []string{}
 	} else {
-		sort.Strings(in.Service)
+		sort.Strings(in.GetService())
 	}
 
-	if in.Capability == nil {
+	if in.GetCapability() == nil {
 		in.Capability = []string{}
 	} else {
-		sort.Strings(in.Capability)
+		sort.Strings(in.GetCapability())
 	}
 
-	if in.Tag == nil {
+	if in.GetTag() == nil {
 		in.Tag = []string{}
 	} else {
-		sort.Strings(in.Tag)
+		sort.Strings(in.GetTag())
 	}
 
-	in.LastSeenAgo = time.Since(in.LastSeen.AsTime()).String()
-	in.Latency = in.PingLatency.AsDuration().String()
+	in.LastSeenAgo = time.Since(in.GetLastSeen().AsTime()).String()
+	in.Latency = in.GetPingLatency().AsDuration().String()
 }
 
 //nolint:gomnd // ignore padding count.
 func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*api.Member) {
-	sort.Slice(hostList, func(i, j int) bool { return hostList[i].Name < hostList[j].Name })
+	sort.Slice(hostList, func(i, j int) bool { return hostList[i].GetName() < hostList[j].GetName() })
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 

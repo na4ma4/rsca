@@ -171,8 +171,9 @@ func (s *Server) streamIDsToHostnames(streamIDs []string) []string {
 func (s *Server) RemoveHost(_ context.Context, in *api.RemoveHostRequest) (*api.RemoveHostResponse, error) {
 	s.logger.Debug("RemoveHost()", zap.Strings("targets", in.GetNames()))
 
+	out := []string{}
 	o := &api.RemoveHostResponse{
-		Names: []string{},
+		Names: out,
 	}
 
 	for _, hostname := range in.GetNames() {
@@ -192,13 +193,15 @@ func (s *Server) RemoveHost(_ context.Context, in *api.RemoveHostRequest) (*api.
 
 			s.logger.Debug("host removed from storage", zap.String("target", hostname))
 
-			o.Names = append(o.Names, v.GetName())
+			out = append(out, v.GetName())
 		}
 
 		if v, ok := s.state.GetMemberByHostname(hostname); ok {
 			s.logger.Debug("host found in storage after removal", zap.String("target", hostname), zap.Reflect("member", v))
 		}
 	}
+
+	o.Names = out
 
 	return o, nil
 }
@@ -304,7 +307,7 @@ func (s *Server) processPipe(
 
 				s.updateLastSeen(streamID, time.Now())
 
-				switch msg := m.M.Message.(type) {
+				switch msg := m.M.GetMessage().(type) {
 				case *api.Message_EventMessage:
 					s.processEventMessage(m.M, msg)
 				case *api.Message_RegisterMessage:
@@ -313,7 +316,7 @@ func (s *Server) processPipe(
 					s.processMemberUpdateMessage(streamID, m.M, msg)
 				case *api.Message_PingMessage:
 					s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
-					s.metric.Received.WithLabelValues(m.M.Envelope.Sender.GetName(), "PingMessage").Inc()
+					s.metric.Received.WithLabelValues(m.M.GetEnvelope().GetSender().GetName(), "PingMessage").Inc()
 
 					if err := common.ProcessPingMessage(s.logger, stream, s.hostname, m.M, msg); err != nil {
 						s.logger.Error("unable to send PongMessage in response to PingMessage", zap.Error(err))
@@ -322,7 +325,7 @@ func (s *Server) processPipe(
 					s.processPongMessage(streamID, m.M, msg)
 				default:
 					s.metric.Received.WithLabelValues("_all", "Unknown").Inc()
-					s.metric.Received.WithLabelValues(m.M.Envelope.Sender.GetName(), "Unknown").Inc()
+					s.metric.Received.WithLabelValues(m.M.GetEnvelope().GetSender().GetName(), "Unknown").Inc()
 					s.logger.Info("Received unhandled message", zap.Reflect("message", m.M))
 				}
 			}
@@ -351,16 +354,17 @@ func (s *Server) processEventMessage(
 	msg *api.Message_EventMessage,
 ) {
 	s.metric.Received.WithLabelValues("_all", "EventMessage").Inc()
-	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "EventMessage").Inc()
+	s.metric.Received.WithLabelValues(in.GetEnvelope().GetSender().GetName(), "EventMessage").Inc()
 	s.metric.EventStatus.WithLabelValues(
-		in.Envelope.Sender.GetName(),
+		in.GetEnvelope().GetSender().GetName(),
 		msg.EventMessage.GetCheck(),
 		msg.EventMessage.GetStatus().String(),
 	).Inc()
 	s.logger.Debug("Received EventMessage")
 	s.logger.Info("received check data", zap.String("response.id", msg.EventMessage.GetId()),
-		zap.String("source.hostname", in.Envelope.Sender.GetName()), zap.String("check.name", msg.EventMessage.GetCheck()),
-		zap.String("check.status", msg.EventMessage.Status.String()),
+		zap.String("source.hostname", in.GetEnvelope().GetSender().GetName()),
+		zap.String("check.name", msg.EventMessage.GetCheck()),
+		zap.String("check.status", msg.EventMessage.GetStatus().String()),
 		zap.String("check.output", msg.EventMessage.GetOutput()))
 
 	if err := writeCheckResponse(s.logger, msg.EventMessage); err != nil {
@@ -374,14 +378,14 @@ func (s *Server) processRegisterMessage(
 	msg *api.Message_RegisterMessage,
 ) {
 	s.metric.Received.WithLabelValues("_all", "RegisterMessage").Inc()
-	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "RegisterMessage").Inc()
+	s.metric.Received.WithLabelValues(in.GetEnvelope().GetSender().GetName(), "RegisterMessage").Inc()
 	s.logger.Info("client registered",
-		zap.String("rsca.client.name", msg.RegisterMessage.Member.GetName()),
-		zap.Strings("rsca.client.tags", msg.RegisterMessage.Member.GetTag()),
-		zap.Strings("rsca.client.capabilities", msg.RegisterMessage.Member.GetCapability()),
-		zap.Strings("rsca.client.services", msg.RegisterMessage.Member.GetService()),
+		zap.String("rsca.client.name", msg.RegisterMessage.GetMember().GetName()),
+		zap.Strings("rsca.client.tags", msg.RegisterMessage.GetMember().GetTag()),
+		zap.Strings("rsca.client.capabilities", msg.RegisterMessage.GetMember().GetCapability()),
+		zap.Strings("rsca.client.services", msg.RegisterMessage.GetMember().GetService()),
 	)
-	s.updateMember(streamID, msg.RegisterMessage.Member)
+	s.updateMember(streamID, msg.RegisterMessage.GetMember())
 }
 
 func (s *Server) processMemberUpdateMessage(
@@ -390,14 +394,14 @@ func (s *Server) processMemberUpdateMessage(
 	msg *api.Message_MemberUpdateMessage,
 ) {
 	s.metric.Received.WithLabelValues("_all", "MemberUpdateMessage").Inc()
-	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "MemberUpdateMessage").Inc()
+	s.metric.Received.WithLabelValues(in.GetEnvelope().GetSender().GetName(), "MemberUpdateMessage").Inc()
 	s.logger.Debug("client updated",
-		zap.String("rsca.client.name", msg.MemberUpdateMessage.Member.GetName()),
-		zap.Strings("rsca.client.tags", msg.MemberUpdateMessage.Member.GetTag()),
-		zap.Strings("rsca.client.capabilities", msg.MemberUpdateMessage.Member.GetCapability()),
-		zap.Strings("rsca.client.services", msg.MemberUpdateMessage.Member.GetService()),
+		zap.String("rsca.client.name", msg.MemberUpdateMessage.GetMember().GetName()),
+		zap.Strings("rsca.client.tags", msg.MemberUpdateMessage.GetMember().GetTag()),
+		zap.Strings("rsca.client.capabilities", msg.MemberUpdateMessage.GetMember().GetCapability()),
+		zap.Strings("rsca.client.services", msg.MemberUpdateMessage.GetMember().GetService()),
 	)
-	s.updateMember(streamID, msg.MemberUpdateMessage.Member)
+	s.updateMember(streamID, msg.MemberUpdateMessage.GetMember())
 }
 
 func (s *Server) updateMember(streamID string, m *api.Member) {
@@ -420,7 +424,7 @@ func (s *Server) processPongMessage(
 	msg *api.Message_PongMessage,
 ) {
 	s.metric.Received.WithLabelValues("_all", "PongMessage").Inc()
-	s.metric.Received.WithLabelValues(in.Envelope.Sender.GetName(), "PongMessage").Inc()
+	s.metric.Received.WithLabelValues(in.GetEnvelope().GetSender().GetName(), "PongMessage").Inc()
 	s.logger.Debug("Received PongMessage",
 		zap.String("streamID", streamID),
 		zap.String("ping.id", msg.PongMessage.GetId()),
@@ -493,27 +497,27 @@ func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 			continue
 		}
 
-		for _, r := range in.Id {
-			if strings.EqualFold(stream.Record.Id, r) {
+		for _, r := range in.GetId() {
+			if strings.EqualFold(stream.Record.GetId(), r) {
 				streamIDs[streamID] = struct{}{}
 			}
 		}
 
-		for _, r := range in.Name {
+		for _, r := range in.GetName() {
 			if stream.Record.IsMatch(r) {
 				streamIDs[streamID] = struct{}{}
 			}
 		}
 
-		if s.compareSlices(stream.Record.Capability, in.Capability) {
+		if s.compareSlices(stream.Record.GetCapability(), in.GetCapability()) {
 			streamIDs[streamID] = struct{}{}
 		}
 
-		if stream.Record.Tag != nil || s.compareSlices(append(stream.Record.Tag, "_all"), in.Tag) {
+		if stream.Record.GetTag() != nil || s.compareSlices(append(stream.Record.GetTag(), "_all"), in.GetTag()) {
 			streamIDs[streamID] = struct{}{}
 		}
 
-		if s.compareSlices(stream.Record.Service, in.Service) {
+		if s.compareSlices(stream.Record.GetService(), in.GetService()) {
 			streamIDs[streamID] = struct{}{}
 		}
 	}
@@ -529,7 +533,7 @@ func (s *Server) streamIDsFromRecipient(in *api.Members) []string {
 // Send sends a supplied message to the clients specified in the api.Message:Recipients.
 func (s *Server) Send(msg *api.Message) error {
 	s.logger.Debug("Send", zap.Reflect("msg", msg))
-	streamIDs := s.streamIDsFromRecipient(msg.Envelope.Recipient)
+	streamIDs := s.streamIDsFromRecipient(msg.GetEnvelope().GetRecipient())
 	s.logger.Debug("Send Streams", zap.Strings("streamIDs", streamIDs))
 
 	s.lock.Lock()
