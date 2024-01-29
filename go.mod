@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/na4ma4/config v1.0.1
 	github.com/na4ma4/go-certprovider v0.2.0
