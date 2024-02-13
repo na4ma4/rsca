@@ -72,7 +72,7 @@ func mainCommand(_ *cobra.Command, _ []string) {
 
 	cp, cpErr := certprovider.NewFileProvider(
 		cfg.GetString("client.cert-dir"),
-		certprovider.ClientProvider(),
+		certprovider.ProviderFromString(cfg.GetString("client.cert-type"), certprovider.ClientProvider()),
 	)
 	checkErrFatal(cpErr, logger, "failed to get certificates")
 

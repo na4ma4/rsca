@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/na4ma4/permbits"
+	"github.com/na4ma4/go-permbits"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
