@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//nolint:gochecknoglobals // cobra uses globals in main
 var cmdHostRemove = &cobra.Command{
 	Use:   "rm <hostname> [hostname0]...[hostnameN]",
 	Short: "Remove Host(s)",
@@ -19,7 +18,6 @@ var cmdHostRemove = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 }
 
-//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHost.AddCommand(cmdHostRemove)
 }

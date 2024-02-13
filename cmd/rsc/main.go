@@ -15,12 +15,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-//nolint:gochecknoglobals // cobra uses globals in main
 var rootCmd = &cobra.Command{
 	Use: "rsc",
 }
 
-//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cobra.OnInitialize(mainconfig.ConfigInit)
 
@@ -36,7 +34,7 @@ func main() {
 func grpcServer(server string) string {
 	host, port, err := net.SplitHostPort(server)
 	if err != nil {
-		return fmt.Sprintf("%s:5888", server)
+		return server + ":5888"
 	}
 
 	if port == "" {

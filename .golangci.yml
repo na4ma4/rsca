@@ -126,6 +126,10 @@ linters-settings:
       - prometheus.LinearBuckets
       - cobra.MinimumNArgs
 
+  gomoddirectives:
+    replace-allow-list:
+      - k8s.io/kube-openapi
+
   gomodguard:
     blocked:
       # List of blocked modules.
@@ -335,3 +339,26 @@ issues:
         - gosec
         - noctx
         - wrapcheck
+    - linters: [ staticcheck ]
+      text: "options.AndFrom is deprecated"
+    - linters: [ staticcheck ]
+      text: "The component config package has been deprecated and will be removed in a future release."
+    - path: "cmd/"
+      linters:
+        - gochecknoinits
+        - gochecknoglobals
+    # Exclude `lll` issues for long lines with `go:generate`.
+    - linters:
+        - lll
+      source: '^//\s*\+kubebuilder:'
+    - linters:
+        - godot
+      source: '^//\s*\+optional'
+    - path: "api/v1/"
+      linters:
+        - gochecknoinits
+    # Allow dot imports for ginkgo and gomega
+    - source: ginkgo|gomega
+      linters:
+        - revive
+      text: "should not use dot imports"

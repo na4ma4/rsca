@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//nolint:gochecknoglobals // cobra uses globals in main
 var cmdTriggerAll = &cobra.Command{
 	Use:     "all [options ...] [host...] [hostN]",
 	Aliases: []string{"a"},
@@ -21,7 +20,6 @@ var cmdTriggerAll = &cobra.Command{
 	Args:    cobra.MinimumNArgs(0),
 }
 
-//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdTrigger.AddCommand(cmdTriggerAll)
 	cmdTriggerAll.PersistentFlags().BoolP("info", "i", false,

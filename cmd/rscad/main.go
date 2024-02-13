@@ -23,13 +23,11 @@ import (
 	"google.golang.org/grpc"
 )
 
-//nolint:gochecknoglobals // cobra uses globals in main
 var rootCmd = &cobra.Command{
 	Use: "rscad",
 	Run: mainCommand,
 }
 
-//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cobra.OnInitialize(mainconfig.ConfigInit)
 

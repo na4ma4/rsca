@@ -2,7 +2,6 @@ package register
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -38,7 +37,7 @@ func New(
 	mb := &api.Member{
 		Id:           uuid.New().String(),
 		Name:         hostName,
-		Capability:   []string{"client", fmt.Sprintf("rsca-%s", version)},
+		Capability:   []string{"client", "rsca-" + version},
 		Service:      checkNames,
 		Tag:          cfg.GetStringSlice("general.tags"),
 		Version:      version,

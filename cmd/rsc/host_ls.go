@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"text/template"
@@ -15,7 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//nolint:gochecknoglobals // cobra uses globals in main
 var cmdHostList = &cobra.Command{
 	Use:   "ls",
 	Short: "List Hosts",
@@ -23,7 +21,6 @@ var cmdHostList = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
-//nolint:gochecknoinits // init is used in main for cobra
 func init() {
 	cmdHostList.PersistentFlags().StringP("format", "f",
 		"{{.Name}}\t{{.Active}}\t{{time .LastSeen}}\t{{age .LastSeen}}\t{{.Tag}}\t{{.Capability}}\t{{age .SystemStart}}"+
@@ -59,7 +56,7 @@ func hostListCommand(_ *cobra.Command, _ []string) {
 	}
 
 	if !strings.HasSuffix(viper.GetString("host.list.format"), "\n") {
-		viper.Set("host.list.format", fmt.Sprintf("%s\n", viper.GetString("host.list.format")))
+		viper.Set("host.list.format", viper.GetString("host.list.format")+"\n")
 	}
 
 	tmpl, err := template.New("").Funcs(basicFunctions()).Parse(viper.GetString("host.list.format"))
