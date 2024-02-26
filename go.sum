@@ -52,8 +52,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/na4ma4/config v1.0.1 h1:afK3uzn5vsHd6KHbLqdyGhiff7lXkXjBj1bYhyjuaCk=
 github.com/na4ma4/config v1.0.1/go.mod h1:rfhZV9quJ3CZB0FjpAm7ykFg2sXA8mu7FtNadQN3mnY=
-github.com/na4ma4/go-certprovider v0.2.1 h1:RHiw97WnZ9qmZdkniz43wND9QA2qRerLYlXSwlDbHHc=
-github.com/na4ma4/go-certprovider v0.2.1/go.mod h1:AjMh7qxH4QrH0awlhrxM7+TUP6Wx0i//Jbgtk3Jk7qw=
+github.com/na4ma4/go-certprovider v0.2.2 h1:pQfG/+0GDLUhP1yR3b3fSELc6nDJr7z6AWE/+XwCjvI=
+github.com/na4ma4/go-certprovider v0.2.2/go.mod h1:K8B+ndXcRH2CYcUxKNZhz1vS+vd9L+Dpd4P2WLr+Z4A=
 github.com/na4ma4/go-permbits v0.4.0 h1:0+oD8hXc7+1FBEx4sGcnQb+3c3ODdjL6sXgz3MSXGSs=
 github.com/na4ma4/go-permbits v0.4.0/go.mod h1:zOAErdXXC0T5YbVFtWAmIAZJCQe9738v2SIXRJDKpdc=
 github.com/na4ma4/go-timestring v0.3.0 h1:Zy4jbZySxvEvgTE3kdDbjSTTRMSiVGZGq0oOMuvjx/4=
