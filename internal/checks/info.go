@@ -35,26 +35,28 @@ type Info struct {
 }
 
 // runCmd runs a supplied command and returns the exitcode.
-//
-//nolint:nestif // it might be "deeply nested", but it's readable and confines this code to this function.
-func (i *Info) runCmd(cmd *exec.Cmd) (int, error) {
+func (i *Info) runCmd(wg *sync.WaitGroup, cmd *exec.Cmd) (int, error) {
 	exitCode := 0
-	err := cmd.Run()
+	if err := cmd.Start(); err != nil {
+		return -1, err
+	}
 
-	if err != nil {
-		// try to get the exit code
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
-			if ws, ok := exitError.Sys().(syscall.WaitStatus); ok {
-				exitCode = ws.ExitStatus()
-			}
-		} else {
-			// This will happen (in OSX) if `name` is not available in $PATH, in this situation,
-			// exit code could not be get, and stderr will be empty string very likely, so we use
-			// the default fail code, and format err to string and set to stderr
-			exitCode = 3
-			err = fmt.Errorf("check failed to run: %w", err)
+	wg.Wait()
+
+	err := cmd.Wait()
+
+	// try to get the exit code
+	var exitError *exec.ExitError
+	if errors.As(err, &exitError) {
+		if ws, ok := exitError.Sys().(syscall.WaitStatus); ok {
+			exitCode = ws.ExitStatus()
 		}
+	} else if err != nil {
+		// This will happen (in OSX) if `name` is not available in $PATH, in this situation,
+		// exit code could not be get, and stderr will be empty string very likely, so we use
+		// the default fail code, and format err to string and set to stderr
+		exitCode = 3
+		err = fmt.Errorf("check failed to run: %w", err)
 	} else if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 		// success, exitCode should be 0 if go is ok
 		exitCode = ws.ExitStatus()
@@ -92,7 +94,7 @@ func (i *Info) wrapCmd(
 		i.ioCopyWaitGroup(&wg, oberr, pberr)
 	}
 
-	exitCode, err := i.runCmd(cmd)
+	exitCode, err := i.runCmd(&wg, cmd)
 
 	wg.Wait()
 
