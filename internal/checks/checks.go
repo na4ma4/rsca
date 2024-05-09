@@ -27,7 +27,7 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 
 	for _, key := range vcfg.AllKeys() {
 		if strings.HasPrefix(key, "check.") {
-			token := strings.SplitN(key, ".", 3) //nolint:gomnd // check keys come in 3 parts.
+			token := strings.SplitN(key, ".", 3) //nolint:mnd // check keys come in 3 parts.
 			checkListMap[token[1]] = true
 		}
 	}
