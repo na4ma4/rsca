@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dosquad/go-cliversion"
 	"github.com/google/uuid"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
@@ -22,7 +23,8 @@ type Message struct {
 // New returns a Message pre-populated.
 func New(
 	cfg config.Conf,
-	hostName, version, buildDate, gitHash string,
+	hostName string,
+	versionInfo *cliversion.VersionInfo,
 	checkList checks.Checks,
 	startTime time.Time,
 ) *Message {
@@ -37,12 +39,12 @@ func New(
 	mb := &api.Member{
 		Id:           uuid.New().String(),
 		Name:         hostName,
-		Capability:   []string{"client", "rsca-" + version},
+		Capability:   []string{"client", "rsca-" + versionInfo.GetBuild().GetVersion()},
 		Service:      checkNames,
 		Tag:          cfg.GetStringSlice("general.tags"),
-		Version:      version,
-		BuildDate:    buildDate,
-		GitHash:      gitHash,
+		Version:      versionInfo.GetBuild().GetVersion(),
+		BuildDate:    versionInfo.GetBuild().GetDate().AsTime().Format(time.RFC3339),
+		GitHash:      versionInfo.GetGit().GetCommit(),
 		ProcessStart: timestamppb.New(startTime),
 	}
 

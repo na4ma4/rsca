@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dosquad/go-cliversion"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-certprovider"
 	"github.com/na4ma4/rsca/api"
@@ -86,7 +87,7 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	hostName := getHostname(cfg)
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
 	cl := client.NewClient(logger, hostName, checkList)
-	regmsg := register.New(cfg, hostName, version, date, commit, checkList, time.Now())
+	regmsg := register.New(cfg, hostName, cliversion.Get(), checkList, time.Now())
 	streamMsg := &api.Message{
 		Envelope: &api.Envelope{Sender: regmsg.Member(), Recipient: api.MembersByID("_server")},
 		Message:  &api.Message_RegisterMessage{RegisterMessage: regmsg.Message()},

@@ -1,3 +1,5 @@
+version: 2
+
 env:
   - CGO_ENABLED=0
 
@@ -12,6 +14,24 @@ builds:
   - id: rsc
     main: ./cmd/rsc
     binary: rsc
+    ldflags:
+      - "-X github.com/dosquad/go-cliversion.BuildDate={{ .Date }}"
+      - "-X github.com/dosquad/go-cliversion.BuildDebug=false "
+      - "-X github.com/dosquad/go-cliversion.BuildMethod=goreleaser "
+      - "-X github.com/dosquad/go-cliversion.BuildVersion={{.Version}} "
+      - "-X github.com/dosquad/go-cliversion.GitCommit={{.ShortCommit}} "
+      - "-X github.com/dosquad/go-cliversion.GitRepo=https://github.com/na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitSlug=na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitTag={{.Version}}"
+      - "-X github.com/dosquad/go-cliversion.GitExactTag={{.RawVersion}}"
+      - "-X main.commit={{.ShortCommit}} "
+      - "-X main.date={{ .Date }} "
+      - "-X main.builtBy=goreleaser "
+      - "-X main.repo=https://github.com/na4ma4/rsca"
+      - "-X main.goVersion=1.22.4 "
+      - "-X main.version={{.Version}}"
+      - "-s"
+      - "-w"
     flags:
       - -tags=release
       - -buildmode=default
@@ -30,6 +50,24 @@ builds:
   - id: rsca
     main: ./cmd/rsca
     binary: rsca
+    ldflags:
+      - "-X github.com/dosquad/go-cliversion.BuildDate={{ .Date }}"
+      - "-X github.com/dosquad/go-cliversion.BuildDebug=false "
+      - "-X github.com/dosquad/go-cliversion.BuildMethod=goreleaser "
+      - "-X github.com/dosquad/go-cliversion.BuildVersion={{.Version}} "
+      - "-X github.com/dosquad/go-cliversion.GitCommit={{.ShortCommit}} "
+      - "-X github.com/dosquad/go-cliversion.GitRepo=https://github.com/na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitSlug=na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitTag={{.Version}}"
+      - "-X github.com/dosquad/go-cliversion.GitExactTag={{.RawVersion}}"
+      - "-X main.commit={{.ShortCommit}} "
+      - "-X main.date={{ .Date }} "
+      - "-X main.builtBy=goreleaser "
+      - "-X main.repo=https://github.com/na4ma4/rsca"
+      - "-X main.goVersion=1.22.4 "
+      - "-X main.version={{.Version}}"
+      - "-s"
+      - "-w"
     flags:
       - -tags=release
       - -buildmode=default
@@ -48,6 +86,24 @@ builds:
   - id: rscad
     main: ./cmd/rscad
     binary: rscad
+    ldflags:
+      - "-X github.com/dosquad/go-cliversion.BuildDate={{ .Date }}"
+      - "-X github.com/dosquad/go-cliversion.BuildDebug=false "
+      - "-X github.com/dosquad/go-cliversion.BuildMethod=goreleaser "
+      - "-X github.com/dosquad/go-cliversion.BuildVersion={{.Version}} "
+      - "-X github.com/dosquad/go-cliversion.GitCommit={{.ShortCommit}} "
+      - "-X github.com/dosquad/go-cliversion.GitRepo=https://github.com/na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitSlug=na4ma4/rsca "
+      - "-X github.com/dosquad/go-cliversion.GitTag={{.Version}}"
+      - "-X github.com/dosquad/go-cliversion.GitExactTag={{.RawVersion}}"
+      - "-X main.commit={{.ShortCommit}} "
+      - "-X main.date={{ .Date }} "
+      - "-X main.builtBy=goreleaser "
+      - "-X main.repo=https://github.com/na4ma4/rsca"
+      - "-X main.goVersion=1.22.4 "
+      - "-X main.version={{.Version}}"
+      - "-s"
+      - "-w"
     flags:
       - -tags=release
       - -buildmode=default
@@ -125,13 +181,13 @@ nfpms:
 brews:
   -
     name: rsc
-    tap:
+    repository:
       owner: na4ma4
       name: homebrew-tap
     commit_author:
       name: goreleaserbot
       email: na4ma4@users.noreply.github.com
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/na4ma4/rsca
     description: Remote service check agent (client)
     test: |
