@@ -1,6 +1,6 @@
 # rsca
 
-![ci](https://github.com/na4ma4/rsca/workflows/ci/badge.svg)
+[![CI](https://github.com/na4ma4/rsca/actions/workflows/ci.yml/badge.svg)](https://github.com/na4ma4/rsca/actions/workflows/ci.yml)
 [![GoDoc](https://godoc.org/github.com/na4ma4/rsca/?status.svg)](https://godoc.org/github.com/na4ma4/rsca)
 [![GitHub issues](https://img.shields.io/github/issues/na4ma4/rsca)](https://github.com/na4ma4/rsca/issues)
 [![GitHub forks](https://img.shields.io/github/forks/na4ma4/rsca)](https://github.com/na4ma4/rsca/network)
