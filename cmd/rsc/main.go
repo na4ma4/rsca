@@ -73,7 +73,7 @@ func zapConfig() zap.Config {
 	}
 }
 
-func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.ClientConn {
+func dialGRPC(_ context.Context, cfg config.Conf, logger *zap.Logger) *grpc.ClientConn {
 	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("admin.server")))
 
 	logger.Debug("connecting to API",
@@ -89,7 +89,7 @@ func dialGRPC(ctx context.Context, cfg config.Conf, logger *zap.Logger) *grpc.Cl
 		logger.Fatal("failed to get certificates", zap.Error(err))
 	}
 
-	gc, err := grpc.DialContext(ctx, grpcServer(cfg.GetString("admin.server")), cp.DialOption(serverHostName))
+	gc, err := grpc.NewClient(grpcServer(cfg.GetString("admin.server")), cp.DialOption(serverHostName))
 	if err != nil {
 		logger.Fatal("failed to connect to server", zap.Error(err))
 	}

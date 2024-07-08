@@ -75,7 +75,7 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	)
 	checkErrFatal(cpErr, logger, "failed to get certificates")
 
-	gc, gcErr := grpc.DialContext(ctx, grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
+	gc, gcErr := grpc.NewClient(grpcServer(cfg.GetString("client.server")), cp.DialOption(serverHostName))
 	checkErrFatal(gcErr, logger, "failed to connect to server")
 
 	rc := api.NewRSCAClient(gc)
