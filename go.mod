@@ -13,7 +13,7 @@ require (
 	github.com/na4ma4/go-permbits v0.5.1
 	github.com/na4ma4/go-timestring v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20180710141335-d9becc38acbd
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
@@ -32,6 +32,7 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240513124658-fba389f38bae // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
