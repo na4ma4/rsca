@@ -2,6 +2,7 @@ package register
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
@@ -49,7 +50,9 @@ func New(
 	}
 
 	if ut, err := host.BootTimeWithContext(context.Background()); err == nil {
-		mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0))
+		if ut < math.MaxInt64 {
+			mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0)) //nolint:gosec // G115 overflow checked above
+		}
 	}
 
 	if is, err := api.InfoWithContext(context.Background(), time.Now()); err == nil {
