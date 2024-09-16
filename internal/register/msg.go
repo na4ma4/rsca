@@ -51,7 +51,7 @@ func New(
 
 	if ut, err := host.BootTimeWithContext(context.Background()); err == nil {
 		if ut < math.MaxInt64 {
-			mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0)) //nolint:gosec // G115 overflow checked above
+			mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0))
 		}
 	}
 
