@@ -3,7 +3,7 @@ module github.com/na4ma4/rsca/magefiles
 go 1.22.2
 
 require (
-	github.com/dosquad/mage v0.1.31
+	github.com/dosquad/mage v0.1.32
 	github.com/magefile/mage v1.15.0
 )
 
