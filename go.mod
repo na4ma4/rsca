@@ -1,7 +1,7 @@
 module github.com/na4ma4/rsca
 
 go 1.22.2
-toolchain go1.22.9
+toolchain go1.22.10
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
@@ -20,8 +20,8 @@ require (
 	github.com/spf13/viper v1.19.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.9.0
-	golang.org/x/text v0.20.0
+	golang.org/x/sync v0.10.0
+	golang.org/x/text v0.21.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.2
 )
