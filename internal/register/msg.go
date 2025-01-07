@@ -40,11 +40,11 @@ func New(
 	mb := &api.Member{
 		Id:           uuid.New().String(),
 		Name:         hostName,
-		Capability:   []string{"client", "rsca-" + versionInfo.GetBuild().GetVersion()},
+		Capability:   []string{"client", "rsca-" + versionInfo.GetBld().GetVersion()},
 		Service:      checkNames,
 		Tag:          cfg.GetStringSlice("general.tags"),
-		Version:      versionInfo.GetBuild().GetVersion(),
-		BuildDate:    versionInfo.GetBuild().GetDate().AsTime().Format(time.RFC3339),
+		Version:      versionInfo.GetBld().GetVersion(),
+		BuildDate:    versionInfo.GetBld().GetDate().AsTime().Format(time.RFC3339),
 		GitHash:      versionInfo.GetGit().GetCommit(),
 		ProcessStart: timestamppb.New(startTime),
 	}
