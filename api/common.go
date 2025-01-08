@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/v3/host"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -14,22 +15,22 @@ import (
 func InfoWithContext(ctx context.Context, ts time.Time) (*InfoStat, error) {
 	is, err := host.InfoWithContext(ctx)
 	if err == nil {
-		o := &InfoStat{
-			Hostname:        is.Hostname,
-			Uptime:          is.Uptime,
-			BootTime:        is.BootTime,
-			Procs:           is.Procs,
-			Os:              is.OS,
-			Platform:        is.Platform,
-			PlatformFamily:  is.PlatformFamily,
-			PlatformVersion: is.PlatformVersion,
-			KernelVersion:   is.KernelVersion,
-			KernelArch:      is.KernelArch,
-			VirtSystem:      is.VirtualizationSystem,
-			VirtRole:        is.VirtualizationRole,
-			HostId:          is.HostID,
+		o := InfoStat_builder{
+			Hostname:        proto.String(is.Hostname),
+			Uptime:          proto.Uint64(is.Uptime),
+			BootTime:        proto.Uint64(is.BootTime),
+			Procs:           proto.Uint64(is.Procs),
+			Os:              proto.String(is.OS),
+			Platform:        proto.String(is.Platform),
+			PlatformFamily:  proto.String(is.PlatformFamily),
+			PlatformVersion: proto.String(is.PlatformVersion),
+			KernelVersion:   proto.String(is.KernelVersion),
+			KernelArch:      proto.String(is.KernelArch),
+			VirtSystem:      proto.String(is.VirtualizationSystem),
+			VirtRole:        proto.String(is.VirtualizationRole),
+			HostId:          proto.String(is.HostID),
 			Timestamp:       timestamppb.New(ts),
-		}
+		}.Build()
 
 		return o, nil
 	}

@@ -9,9 +9,9 @@ package api
 
 // MembersByID returns a member from a supplied id.
 func MembersByID(id string) *Members {
-	return &Members{
+	return Members_builder{
 		Id: []string{id},
-	}
+	}.Build()
 }
 
 // RecipientBySender converts a Envelope.Sender to Envelope.Recipient.
@@ -22,9 +22,9 @@ func RecipientBySender(in *Member) *Members {
 
 	switch {
 	case in.GetId() != "":
-		return &Members{Id: []string{in.GetId()}}
+		return Members_builder{Id: []string{in.GetId()}}.Build()
 	case in.GetName() != "":
-		return &Members{Name: []string{in.GetName()}}
+		return Members_builder{Name: []string{in.GetName()}}.Build()
 	default:
 		return &Members{}
 	}

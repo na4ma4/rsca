@@ -12,6 +12,7 @@ import (
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/shirou/gopsutil/v3/host"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -37,26 +38,26 @@ func New(
 		}
 	}
 
-	mb := &api.Member{
-		Id:           uuid.New().String(),
-		Name:         hostName,
-		Capability:   []string{"client", "rsca-" + versionInfo.GetBuild().GetVersion()},
+	mb := api.Member_builder{
+		Id:           proto.String(uuid.New().String()),
+		Name:         proto.String(hostName),
+		Capability:   []string{"client", "rsca-" + versionInfo.GetBld().GetVersion()},
 		Service:      checkNames,
 		Tag:          cfg.GetStringSlice("general.tags"),
-		Version:      versionInfo.GetBuild().GetVersion(),
-		BuildDate:    versionInfo.GetBuild().GetDate().AsTime().Format(time.RFC3339),
-		GitHash:      versionInfo.GetGit().GetCommit(),
+		Version:      proto.String(versionInfo.GetBld().GetVersion()),
+		BuildDate:    proto.String(versionInfo.GetBld().GetDate().AsTime().Format(time.RFC3339)),
+		GitHash:      proto.String(versionInfo.GetGit().GetCommit()),
 		ProcessStart: timestamppb.New(startTime),
-	}
+	}.Build()
 
 	if ut, err := host.BootTimeWithContext(context.Background()); err == nil {
 		if ut < math.MaxInt64 {
-			mb.SystemStart = timestamppb.New(time.Unix(int64(ut), 0))
+			mb.SetSystemStart(timestamppb.New(time.Unix(int64(ut), 0)))
 		}
 	}
 
 	if is, err := api.InfoWithContext(context.Background(), time.Now()); err == nil {
-		mb.InfoStat = is
+		mb.SetInfoStat(is)
 	}
 
 	return &Message{
@@ -69,9 +70,9 @@ func (msg *Message) Message() *api.RegisterMessage {
 	msg.lock.Lock()
 	defer msg.lock.Unlock()
 
-	return &api.RegisterMessage{
+	return api.RegisterMessage_builder{
 		Member: msg.member,
-	}
+	}.Build()
 }
 
 // UpdateMessage returns the actual api.MemberUpdateMessage.
@@ -79,9 +80,9 @@ func (msg *Message) UpdateMessage() *api.MemberUpdateMessage {
 	msg.lock.Lock()
 	defer msg.lock.Unlock()
 
-	return &api.MemberUpdateMessage{
+	return api.MemberUpdateMessage_builder{
 		Member: msg.member,
-	}
+	}.Build()
 }
 
 // Member returns the member details used in the api.RegisterMessage.
@@ -98,6 +99,6 @@ func (msg *Message) UpdateInfoStat(ctx context.Context) {
 	defer msg.lock.Unlock()
 
 	if is, err := api.InfoWithContext(ctx, time.Now()); err == nil {
-		msg.member.InfoStat = is
+		msg.member.SetInfoStat(is)
 	}
 }

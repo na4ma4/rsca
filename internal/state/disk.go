@@ -184,7 +184,7 @@ func (d *Disk) DeactivateByStreamID(streamID string) error {
 	var m Member
 
 	if lookupErr := d.db.One("StreamID", streamID, &m); lookupErr == nil {
-		m.Member.Active = false
+		m.Member.SetActive(false)
 		m.StreamID = ""
 
 		if saveErr := d.db.Save(&m); saveErr != nil {
@@ -203,7 +203,7 @@ func (d *Disk) DeactivateByHostname(hostname string) error {
 	var m Member
 
 	if lookupErr := d.db.One("ID", hostname, &m); lookupErr == nil {
-		m.Member.Active = false
+		m.Member.SetActive(false)
 		m.StreamID = ""
 
 		if saveErr := d.db.Save(&m); saveErr != nil {

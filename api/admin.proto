@@ -1,7 +1,10 @@
-syntax = "proto3";
+edition = "2023";
 
 package rsca.api;
 option go_package = "github.com/na4ma4/rsca/api";
+
+import "google/protobuf/go_features.proto";
+option features.(pb.go).api_level = API_OPAQUE;
 
 import "github.com/na4ma4/rsca/api/common.proto";
 

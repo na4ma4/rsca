@@ -56,14 +56,14 @@ func triggerAllCommand(_ *cobra.Command, args []string) {
 	gc := dialGRPC(ctx, cfg, logger)
 	cc := api.NewAdminClient(gc)
 
-	ms := &api.Members{
+	ms := api.Members_builder{
 		Tag:        cfg.GetStringSlice("trigger.all.tags"),
 		Service:    cfg.GetStringSlice("trigger.all.services"),
 		Capability: cfg.GetStringSlice("trigger.all.capabilities"),
-	}
+	}.Build()
 
 	if len(args) > 0 {
-		ms.Name = args
+		ms.SetName(args)
 	}
 
 	if cfg.GetBool("trigger.all.info") { //nolint:nestif // removing nesting harms readability.

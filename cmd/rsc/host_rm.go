@@ -36,9 +36,9 @@ func hostRemoveCommand(_ *cobra.Command, args []string) {
 
 	cc := api.NewAdminClient(gc)
 
-	resp, err := cc.RemoveHost(ctx, &api.RemoveHostRequest{
+	resp, err := cc.RemoveHost(ctx, api.RemoveHostRequest_builder{
 		Names: args,
-	})
+	}.Build())
 	if err != nil {
 		logger.Fatal("unable to send RemoveHost command to server", zap.Error(err))
 	}

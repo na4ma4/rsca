@@ -88,10 +88,10 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	checkList := checks.GetChecksFromViper(cfg, viper.GetViper(), logger, hostName)
 	cl := client.NewClient(logger, hostName, checkList)
 	regmsg := register.New(cfg, hostName, cliversion.Get(), checkList, time.Now())
-	streamMsg := &api.Message{
-		Envelope: &api.Envelope{Sender: regmsg.Member(), Recipient: api.MembersByID("_server")},
-		Message:  &api.Message_RegisterMessage{RegisterMessage: regmsg.Message()},
-	}
+	streamMsg := api.Message_builder{
+		Envelope:        api.Envelope_builder{Sender: regmsg.Member(), Recipient: api.MembersByID("_server")}.Build(),
+		RegisterMessage: regmsg.Message(),
+	}.Build()
 	c := make(chan os.Signal, 1)
 
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
