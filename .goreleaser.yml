@@ -5,7 +5,7 @@ env:
 
 before:
   hooks:
-    - make test
+    - mage
     - go generate ./...
     - go mod tidy
     - go mod download
