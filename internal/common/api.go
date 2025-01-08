@@ -5,6 +5,7 @@ import (
 
 	"github.com/na4ma4/rsca/api"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type streamServer interface {
@@ -17,25 +18,11 @@ func ProcessPingMessage(
 	stream streamServer,
 	hostName string,
 	in *api.Message,
-	msg *api.Message_PingMessage,
+	msg *api.PingMessage,
 ) error {
 	logger.Debug("Received PingMessage")
 
-	if err := stream.Send(&api.Message{
-		Envelope: &api.Envelope{
-			Sender: &api.Member{
-				Name: hostName,
-			},
-			Recipient: api.RecipientBySender(in.GetEnvelope().GetSender()),
-		},
-		Message: &api.Message_PongMessage{
-			PongMessage: &api.PongMessage{
-				Id:       msg.PingMessage.GetId(),
-				StreamId: msg.PingMessage.GetStreamId(),
-				Ts:       msg.PingMessage.GetTs(),
-			},
-		},
-	}); err != nil {
+	if err := stream.Send(GeneratePingMessage(logger, hostName, in, msg)); err != nil {
 		return fmt.Errorf("unable to send ping message: %w", err)
 	}
 
@@ -47,23 +34,21 @@ func GeneratePingMessage(
 	logger *zap.Logger,
 	hostName string,
 	in *api.Message,
-	msg *api.Message_PingMessage,
+	msg *api.PingMessage,
 ) *api.Message {
 	logger.Debug("Received PingMessage")
 
-	return &api.Message{
-		Envelope: &api.Envelope{
-			Sender: &api.Member{
-				Name: hostName,
-			},
+	return api.Message_builder{
+		Envelope: api.Envelope_builder{
+			Sender: api.Member_builder{
+				Name: proto.String(hostName),
+			}.Build(),
 			Recipient: api.RecipientBySender(in.GetEnvelope().GetSender()),
-		},
-		Message: &api.Message_PongMessage{
-			PongMessage: &api.PongMessage{
-				Id:       msg.PingMessage.GetId(),
-				StreamId: msg.PingMessage.GetStreamId(),
-				Ts:       msg.PingMessage.GetTs(),
-			},
-		},
-	}
+		}.Build(),
+		PongMessage: api.PongMessage_builder{
+			Id:       proto.String(msg.GetId()),
+			StreamId: proto.String(msg.GetStreamId()),
+			Ts:       msg.GetTs(),
+		}.Build(),
+	}.Build()
 }

@@ -25,25 +25,25 @@ func init() {
 
 func fillInAPIMember(in *api.Member) {
 	if in.GetService() == nil {
-		in.Service = []string{}
+		in.SetService([]string{})
 	} else {
 		sort.Strings(in.GetService())
 	}
 
 	if in.GetCapability() == nil {
-		in.Capability = []string{}
+		in.SetCapability([]string{})
 	} else {
 		sort.Strings(in.GetCapability())
 	}
 
 	if in.GetTag() == nil {
-		in.Tag = []string{}
+		in.SetTag([]string{})
 	} else {
 		sort.Strings(in.GetTag())
 	}
 
-	in.LastSeenAgo = time.Since(in.GetLastSeen().AsTime()).String()
-	in.Latency = in.GetPingLatency().AsDuration().String()
+	in.SetLastSeenAgo(time.Since(in.GetLastSeen().AsTime()).String())
+	in.SetLatency(in.GetPingLatency().AsDuration().String())
 }
 
 //nolint:gomnd // ignore padding count.

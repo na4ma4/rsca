@@ -19,6 +19,7 @@ import (
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -126,24 +127,24 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 
 	exitCode, ob, oberr, err := i.wrapCmd(ctx, args)
 	status := api.ExitCodeToStatus(exitCode)
-	resp := &api.EventMessage{
-		Check:            i.Name,
-		Hostname:         i.Hostname,
-		Type:             i.Type,
-		Id:               uuid.New().String(),
-		Output:           strings.TrimSpace(ob.String()),
-		Status:           status,
+	resp := api.EventMessage_builder{
+		Check:            proto.String(i.Name),
+		Hostname:         proto.String(i.Hostname),
+		Type:             &i.Type,
+		Id:               proto.String(uuid.New().String()),
+		Output:           proto.String(strings.TrimSpace(ob.String())),
+		Status:           &status,
 		RequestTimestamp: timestamppb.New(t),
-	}
+	}.Build()
 
 	switch {
 	case errors.Is(ctx.Err(), context.DeadlineExceeded):
-		resp.OutputError = "check timeout"
-		resp.Status = api.Status_UNKNOWN
+		resp.SetOutputError("check timeout")
+		resp.SetStatus(api.Status_UNKNOWN)
 	case err != nil:
-		resp.OutputError = err.Error()
+		resp.SetOutputError(err.Error())
 	default:
-		resp.OutputError = strings.TrimSpace(oberr.String())
+		resp.SetOutputError(strings.TrimSpace(oberr.String()))
 	}
 
 	if viper.GetDuration("general.jitter").Seconds() > 1 {

@@ -122,10 +122,10 @@ func (c *Client) SendRepeatRegistration(ctx context.Context) {
 	c.logger.Debug("sending repeat registration message")
 	c.register.UpdateInfoStat(ctx)
 
-	c.outbox <- &api.Message{
-		Envelope: &api.Envelope{Sender: c.register.Member(), Recipient: api.MembersByID("_server")},
-		Message:  &api.Message_MemberUpdateMessage{MemberUpdateMessage: c.register.UpdateMessage()},
-	}
+	c.outbox <- api.Message_builder{
+		Envelope:            api.Envelope_builder{Sender: c.register.Member(), Recipient: api.MembersByID("_server")}.Build(),
+		MemberUpdateMessage: c.register.UpdateMessage(),
+	}.Build()
 }
 
 // // Send adds a message to the outbox to be sent, may block if channel is full.
@@ -134,15 +134,13 @@ func (c *Client) SendRepeatRegistration(ctx context.Context) {
 // }
 
 func (c *Client) wrapEventMessage(in *api.EventMessage) *api.Message {
-	return &api.Message{
-		Envelope: &api.Envelope{
+	return api.Message_builder{
+		Envelope: api.Envelope_builder{
 			Recipient: api.MembersByID("_server"),
 			Sender:    c.register.Member(),
-		},
-		Message: &api.Message_EventMessage{
-			EventMessage: in,
-		},
-	}
+		}.Build(),
+		EventMessage: in,
+	}.Build()
 }
 
 // RunEvents runs as a go routine that processes the response channel and creates messages to add to the outbox.
@@ -169,18 +167,18 @@ func (c *Client) RunEvents(
 				}
 			case in, ok := <-c.inbox:
 				if ok {
-					if in != nil && in.GetMessage() != nil {
-						switch msg := in.GetMessage().(type) {
-						case *api.Message_PingMessage:
+					if in != nil {
+						switch v := in.WhichMessage(); v { //nolint:exhaustive // default catches unhandled.
+						case api.Message_PingMessage_case:
 							go func() {
-								c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, msg)
+								c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, in.GetPingMessage())
 							}()
-						case *api.Message_TriggerAllMessage:
+						case api.Message_TriggerAllMessage_case:
 							go c.processUpdateAll()
-						case *api.Message_RepeatRegistrationMessage:
+						case api.Message_RepeatRegistrationMessage_case:
 							go c.processRepeatRegister(ctx)
 						default:
-							c.logger.Info("Received unhandled message", zap.Reflect("message", in))
+							c.logger.Info("Received unhandled message", zap.String("message-type", v.String()))
 						}
 						c.logger.Debug("message processing finished")
 					} else {
