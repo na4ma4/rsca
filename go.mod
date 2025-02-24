@@ -5,7 +5,7 @@ go 1.23.4
 require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/dosquad/go-cliversion v0.2.1
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/na4ma4/config v1.0.2
