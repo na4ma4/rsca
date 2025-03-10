@@ -13,7 +13,7 @@ require (
 	github.com/na4ma4/go-permbits v0.5.1
 	github.com/na4ma4/go-timestring v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20240725214427-1c1fdd37c5ac
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
