@@ -58,8 +58,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/na4ma4/config v1.0.3 h1:urL8tDVK2nOffQ4CeemRmSCUdzr+WgQ2Q1RhVGX6BYU=
 github.com/na4ma4/config v1.0.3/go.mod h1:tuIufOEBLzp7n4Swb8CWXOSL9LjcRvAum4NMmnJ5IXE=
-github.com/na4ma4/go-certprovider v0.3.4 h1:4+IG7O4+Zwbj9WGbrY1QsBrmqSNIXR2Ih3WVLBG1yNs=
-github.com/na4ma4/go-certprovider v0.3.4/go.mod h1:cU9OZ+XVcO0Nn8//PMzxVYzrdb9ofcFwIOkeOz01ph8=
+github.com/na4ma4/go-certprovider v0.3.5 h1:OLe8l1ZIogeIMFldD9GyJG8jz+WhKVFl/nfDZlBJ6LA=
+github.com/na4ma4/go-certprovider v0.3.5/go.mod h1:koYrN0uBmlFLlJ2vL0JLxo1Drnr6+6X7tagWKAkWHvg=
 github.com/na4ma4/go-permbits v0.5.2 h1:BTgwLI0jVwIOg4oo5SoBhL/KEMSgI0oBM3IUhzvKF00=
 github.com/na4ma4/go-permbits v0.5.2/go.mod h1:hTZ7mFUNSW40AazP1B02K74sSJP9Moaei2LVSyJHFAQ=
 github.com/na4ma4/go-timestring v0.3.0 h1:Zy4jbZySxvEvgTE3kdDbjSTTRMSiVGZGq0oOMuvjx/4=
