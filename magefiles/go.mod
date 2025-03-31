@@ -1,9 +1,10 @@
 module github.com/na4ma4/rsca/magefiles
 
 go 1.23.4
+toolchain go1.24.1
 
 require (
-	github.com/dosquad/mage v0.2.5
+	github.com/dosquad/mage v0.3.1
 	github.com/magefile/mage v1.15.0
 )
 
