@@ -135,7 +135,7 @@ nfpms:
     id: rsca
     package_name: rsca
     file_name_template: "rsca_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
-    builds:
+    ids:
       - rsca
     homepage: https://github.com/na4ma4/rsca
     maintainer: na4ma4 <na4ma4@users.noreply.github.com>
@@ -158,7 +158,7 @@ nfpms:
     id: rscad
     package_name: rscad
     file_name_template: "rscad_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
-    builds:
+    ids:
       - rscad
     homepage: https://github.com/na4ma4/rsca
     maintainer: na4ma4 <na4ma4@users.noreply.github.com>
