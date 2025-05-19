@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/dosquad/go-cliversion"
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-certprovider"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/client"
 	"github.com/na4ma4/rsca/internal/checks"
@@ -20,7 +22,6 @@ import (
 	"github.com/na4ma4/rsca/internal/register"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 )
@@ -52,9 +53,7 @@ func main() {
 
 func mainCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfDFromViper(viper.GetViper(), "/etc/nagios/rsca.d/", "rsca")
-
-	logger, _ := cfg.ZapConfig().Build()
-	defer logger.Sync()
+	_, logger := common.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,8 +65,8 @@ func mainCommand(_ *cobra.Command, _ []string) {
 		serverHostName = cfg.GetString("client.sni")
 	}
 
-	logger.Debug("Connecting to API", zap.String("bind", grpcServer(cfg.GetString("client.server"))),
-		zap.String("dns-name", serverHostName))
+	logger.DebugContext(ctx, "Connecting to API", slog.String("bind", grpcServer(cfg.GetString("client.server"))),
+		slog.String("dns-name", serverHostName))
 
 	cp, cpErr := certprovider.NewFileProvider(
 		cfg.GetString("client.cert-dir"),
@@ -102,17 +101,17 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	eg.Go(cl.RunEvents(ctx, cancel, regmsg, respChan))
 
 	if err := stream.Send(streamMsg); err != nil {
-		logger.Fatal("unable to register with server", zap.Error(err))
+		logger.ErrorContext(ctx, "unable to register with server", slogtool.ErrorAttr(err))
 	}
 
 	if err := eg.Wait(); err != nil {
-		logger.Fatal("routine returned error", zap.Error(err))
+		logger.ErrorContext(ctx, "routine returned error", slogtool.ErrorAttr(err))
 	}
 }
 
-func checkErrFatal(err error, logger *zap.Logger, msg string) {
+func checkErrFatal(err error, logger *slog.Logger, msg string) {
 	if err != nil {
-		logger.Fatal(msg, zap.Error(err))
+		logger.Error(msg, slogtool.ErrorAttr(err))
 	}
 }
 

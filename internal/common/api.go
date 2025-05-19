@@ -1,10 +1,11 @@
 package common
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/na4ma4/rsca/api"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -14,15 +15,16 @@ type streamServer interface {
 
 // ProcessPingMessage is a common handler for processing PingMessage messages.
 func ProcessPingMessage(
-	logger *zap.Logger,
+	ctx context.Context,
+	logger *slog.Logger,
 	stream streamServer,
 	hostName string,
 	in *api.Message,
 	msg *api.PingMessage,
 ) error {
-	logger.Debug("Received PingMessage")
+	logger.DebugContext(ctx, "Received PingMessage")
 
-	if err := stream.Send(GeneratePingMessage(logger, hostName, in, msg)); err != nil {
+	if err := stream.Send(GeneratePingMessage(ctx, logger, hostName, in, msg)); err != nil {
 		return fmt.Errorf("unable to send ping message: %w", err)
 	}
 
@@ -31,12 +33,13 @@ func ProcessPingMessage(
 
 // GeneratePingMessage is a common handler for generating PingMessage messages.
 func GeneratePingMessage(
-	logger *zap.Logger,
+	ctx context.Context,
+	logger *slog.Logger,
 	hostName string,
 	in *api.Message,
 	msg *api.PingMessage,
 ) *api.Message {
-	logger.Debug("Received PingMessage")
+	logger.DebugContext(ctx, "Received PingMessage")
 
 	return api.Message_builder{
 		Envelope: api.Envelope_builder{

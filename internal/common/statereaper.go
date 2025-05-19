@@ -2,22 +2,23 @@ package common
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/state"
-	"go.uber.org/zap"
 )
 
 // StateReaper periodically checks the state store and deactivates old entries.
 func StateReaper(
 	ctx context.Context,
 	cfg config.Conf,
-	logger *zap.Logger,
+	logger *slog.Logger,
 	st state.State,
 ) func() error {
-	logger.Info("starting state reaper")
+	logger.InfoContext(ctx, "starting state reaper")
 
 	ticker := time.NewTicker(cfg.GetDuration("server.state-tick"))
 
@@ -25,18 +26,20 @@ func StateReaper(
 		for {
 			select {
 			case ts := <-ticker.C:
-				logger.Debug("state reaper tick received")
+				logger.DebugContext(ctx, "state reaper tick received")
 
 				expireState := []string{}
 
 				expireTime := ts.Add(-1 * cfg.GetDuration("server.state-timeout")).UTC()
 
 				_ = st.Walk(func(in *api.Member) error {
-					if in != nil && in.GetLastSeen() != nil && in.GetActive() && !in.GetLastSeen().AsTime().After(expireTime) {
+					if in != nil && in.GetLastSeen() != nil &&
+						in.GetActive() &&
+						!in.GetLastSeen().AsTime().After(expireTime) {
 						logger.Debug("adding host to inactive list",
-							zap.String("rsca.client.name", in.GetName()),
-							zap.Time("expireTime", expireTime),
-							zap.Time("lastseen", in.GetLastSeen().AsTime()),
+							slog.String("rsca.client.name", in.GetName()),
+							slog.Time("expireTime", expireTime),
+							slog.Time("lastseen", in.GetLastSeen().AsTime()),
 						)
 						expireState = append(expireState, in.GetName())
 					}
@@ -45,14 +48,17 @@ func StateReaper(
 				})
 
 				for k := range expireState {
-					logger.Info("deactivating host for inactivity", zap.String("rsca.client.name", expireState[k]))
+					logger.InfoContext(ctx,
+						"deactivating host for inactivity",
+						slog.String("rsca.client.name", expireState[k]),
+					)
 
 					if err := st.DeactivateByHostname(expireState[k]); err != nil {
-						logger.Error("unable to deactive member", zap.Error(err))
+						logger.ErrorContext(ctx, "unable to deactive member", slogtool.ErrorAttr(err))
 					}
 				}
 			case <-ctx.Done():
-				logger.Debug("StateReaper Done()")
+				logger.DebugContext(ctx, "StateReaper Done()")
 				ticker.Stop()
 
 				return nil

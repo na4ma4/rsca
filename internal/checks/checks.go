@@ -2,13 +2,13 @@ package checks
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 // Checks slice of checks with NextRun method for kicking clients to update.
@@ -22,7 +22,7 @@ func (c Checks) NextRun(t time.Time) {
 }
 
 // GetChecksFromViper gets all the checks from the viper.Viper config.
-func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, hostName string) Checks {
+func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *slog.Logger, hostName string) Checks {
 	checkListMap := make(map[string]bool)
 
 	for _, key := range vcfg.AllKeys() {
@@ -37,8 +37,8 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 
 	for v := range checkListMap {
 		checkList[i] = GetCheckFromViper(cfg, logger, v, hostName)
-		logger.Info("adding check", zap.String("check.name", checkList[i].Name),
-			zap.Duration("check.period", checkList[i].Period))
+		logger.Info("adding check", slog.String("check.name", checkList[i].Name),
+			slog.Duration("check.period", checkList[i].Period))
 		i++
 	}
 
@@ -46,7 +46,7 @@ func GetChecksFromViper(cfg config.Conf, vcfg *viper.Viper, logger *zap.Logger, 
 }
 
 // GetCheckFromViper returns a check with the specified name from the config file.
-func GetCheckFromViper(cfg config.Conf, logger *zap.Logger, name, hostName string) *Info {
+func GetCheckFromViper(cfg config.Conf, logger *slog.Logger, name, hostName string) *Info {
 	check := &Info{
 		Name:     cfg.GetString(fmt.Sprintf("check.%s.name", name)),
 		Period:   cfg.GetDuration(fmt.Sprintf("check.%s.period", name)),
@@ -84,8 +84,8 @@ func GetCheckFromViper(cfg config.Conf, logger *zap.Logger, name, hostName strin
 		check.Type = api.CheckType_SERVICE
 	default:
 		logger.Warn("unknown check type, defaulting to 'service'",
-			zap.String("check", check.Name),
-			zap.String("check-type-supplied", cfg.GetString(fmt.Sprintf("check.%s.type", name))),
+			slog.String("check", check.Name),
+			slog.String("check-type-supplied", cfg.GetString(fmt.Sprintf("check.%s.type", name))),
 		)
 
 		check.Type = api.CheckType_SERVICE

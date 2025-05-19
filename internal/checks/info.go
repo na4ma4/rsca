@@ -6,7 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"log/slog"
+	"math/rand/v2"
 	"os/exec"
 	"strings"
 	"sync"
@@ -18,7 +19,6 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -149,8 +149,9 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 
 	if viper.GetDuration("general.jitter").Seconds() > 1 {
 		// don't care about how secure the random is, it's for jitter calculations
+		//nolint:gosec // basic random is good enough.
 		checkJitter := time.Duration(
-			rand.Intn(int(viper.GetDuration("general.jitter").Seconds())), //nolint:gosec // basic random is good enough.
+			rand.IntN(int(viper.GetDuration("general.jitter").Seconds())),
 		) * time.Second
 		i.NextRun = time.Now().Add(i.Period).Add(checkJitter)
 	} else {
@@ -164,7 +165,7 @@ func (i *Info) Run(ctx context.Context, t time.Time) *api.EventMessage {
 func RunChecks(
 	ctx context.Context,
 	cfg config.Conf,
-	_ *zap.Logger,
+	_ *slog.Logger,
 	checkList []*Info,
 	respChan chan *api.EventMessage,
 ) func() error {

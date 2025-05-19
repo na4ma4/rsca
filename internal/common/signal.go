@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/na4ma4/config"
 	"github.com/okzk/sdnotify"
-	"go.uber.org/zap"
 )
 
 // ErrSignalReceived is returned when an interrupt or term signal is received.
@@ -19,7 +19,7 @@ func WaitForOSSignal(
 	ctx context.Context,
 	cancel context.CancelFunc,
 	cfg config.Conf,
-	logger *zap.Logger,
+	logger *slog.Logger,
 	c chan os.Signal,
 ) func() error {
 	return func() error {
@@ -35,7 +35,7 @@ func WaitForOSSignal(
 
 				return fmt.Errorf("%w: %s", ErrSignalReceived, s.String())
 			case <-ctx.Done():
-				logger.Debug("WaitForOSSignal Done()")
+				logger.DebugContext(ctx, "WaitForOSSignal Done()")
 
 				if cfg.GetBool("watchdog.enabled") {
 					_ = sdnotify.Stopping()

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"context"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +25,7 @@ func init() {
 	rootCmd.AddCommand(cmdHost)
 }
 
-func fillInAPIMember(in *api.Member) {
+func fillInAPIMember(_ context.Context, in *api.Member) {
 	if in.GetService() == nil {
 		in.SetService([]string{})
 	} else {
@@ -47,7 +49,13 @@ func fillInAPIMember(in *api.Member) {
 }
 
 //nolint:gomnd // ignore padding count.
-func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*api.Member) {
+func printHostList(
+	ctx context.Context,
+	logger *slog.Logger,
+	tmpl *template.Template,
+	forceHeaderAbsent bool,
+	hostList []*api.Member,
+) {
 	sort.Slice(hostList, func(i, j int) bool { return hostList[i].GetName() < hostList[j].GetName() })
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
@@ -88,13 +96,13 @@ func printHostList(tmpl *template.Template, forceHeaderAbsent bool, hostList []*
 			"Tag":     "Tags",
 			"Version": "Version",
 		}); err != nil {
-			log.Printf("error pparsing template: %s", err.Error())
+			logger.ErrorContext(ctx, "error parsing template", slogtool.ErrorAttr(err))
 		}
 	}
 
 	for _, in := range hostList {
 		if err := tmpl.Execute(w, in); err != nil {
-			log.Printf("error displaying host: %s", err.Error())
+			logger.ErrorContext(ctx, "error displaying host", slogtool.ErrorAttr(err))
 		}
 	}
 

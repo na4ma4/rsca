@@ -1,18 +1,22 @@
 package checks_test
 
 import (
+	"bytes"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
-	"go.uber.org/zap"
 )
 
 func TestLoadTestChecks(t *testing.T) {
 	vcfg, cfg := initTestConfig()
-	logger := zap.NewNop()
+	var buf bytes.Buffer
+	h := slog.NewJSONHandler(&buf, nil)
+	logger := slog.New(h)
+
 	checkList := checks.GetChecksFromViper(cfg, vcfg, logger, "localhost.localdomain")
 
 	expectTestList := checks.Checks{

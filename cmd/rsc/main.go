@@ -3,15 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-certprovider"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/internal/mainconfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
 
@@ -44,41 +44,12 @@ func grpcServer(server string) string {
 	return fmt.Sprintf("%s:%s", host, port)
 }
 
-func zapEncoderConfig() zapcore.EncoderConfig {
-	return zapcore.EncoderConfig{
-		// Keys can be anything except the empty string.
-		TimeKey:        "T",
-		LevelKey:       "L",
-		NameKey:        "N",
-		CallerKey:      zapcore.OmitKey,
-		FunctionKey:    zapcore.OmitKey,
-		MessageKey:     "M",
-		StacktraceKey:  "S",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.StringDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-}
-
-func zapConfig() zap.Config {
-	return zap.Config{
-		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
-		Development:      false,
-		Encoding:         "console",
-		EncoderConfig:    zapEncoderConfig(),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
-	}
-}
-
-func dialGRPC(_ context.Context, cfg config.Conf, logger *zap.Logger) *grpc.ClientConn {
+func dialGRPC(ctx context.Context, cfg config.Conf, logger *slog.Logger) *grpc.ClientConn {
 	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("admin.server")))
 
-	logger.Debug("connecting to API",
-		zap.String("bind", grpcServer(cfg.GetString("admin.server"))),
-		zap.String("dns-name", serverHostName),
+	logger.DebugContext(ctx, "connecting to API",
+		slog.String("bind", grpcServer(cfg.GetString("admin.server"))),
+		slog.String("dns-name", serverHostName),
 	)
 
 	cp, err := certprovider.NewFileProvider(
@@ -86,12 +57,14 @@ func dialGRPC(_ context.Context, cfg config.Conf, logger *zap.Logger) *grpc.Clie
 		certprovider.CertProvider(),
 	)
 	if err != nil {
-		logger.Fatal("failed to get certificates", zap.Error(err))
+		logger.ErrorContext(ctx, "failed to get certificates", slogtool.ErrorAttr(err))
+		panic(err)
 	}
 
 	gc, err := grpc.NewClient(grpcServer(cfg.GetString("admin.server")), cp.DialOption(serverHostName))
 	if err != nil {
-		logger.Fatal("failed to connect to server", zap.Error(err))
+		logger.ErrorContext(ctx, "failed to connect to server", slogtool.ErrorAttr(err))
+		panic(err)
 	}
 
 	return gc
