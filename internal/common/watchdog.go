@@ -3,20 +3,26 @@ package common
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/okzk/sdnotify"
-	"go.uber.org/zap"
 )
 
 // ErrWatchdogFailed is returned when the systemd watchdog tick fails.
 var ErrWatchdogFailed = errors.New("systemd watchdog failed")
 
 // ProcessWatchdog sends systemd watchdog heartbeats to the systemd process.
-func ProcessWatchdog(ctx context.Context, cancel context.CancelFunc, cfg config.Conf, logger *zap.Logger) func() error {
+func ProcessWatchdog(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	cfg config.Conf,
+	logger *slog.Logger,
+) func() error {
 	if cfg.GetBool("watchdog.enabled") {
-		logger.Info("starting watchdog")
+		logger.InfoContext(ctx, "starting watchdog")
 
 		ticker := time.NewTicker(cfg.GetDuration("watchdog.tick"))
 
@@ -24,16 +30,16 @@ func ProcessWatchdog(ctx context.Context, cancel context.CancelFunc, cfg config.
 			for {
 				select {
 				case <-ticker.C:
-					logger.Debug("watchdog tick sent")
+					logger.DebugContext(ctx, "watchdog tick sent")
 
 					if err := sdnotify.Watchdog(); err != nil {
-						logger.Error("systemd watchdog returned error", zap.Error(err))
+						logger.ErrorContext(ctx, "systemd watchdog returned error", slogtool.ErrorAttr(err))
 						cancel()
 
 						return ErrWatchdogFailed
 					}
 				case <-ctx.Done():
-					logger.Debug("ProcessWatchdog Done()")
+					logger.DebugContext(ctx, "ProcessWatchdog Done()")
 					ticker.Stop()
 
 					return nil

@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"strings"
 	"text/template"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
+	"github.com/na4ma4/rsca/internal/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 var cmdHostList = &cobra.Command{
@@ -35,9 +37,7 @@ func init() {
 
 func hostListCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-
-	logger, _ := zapConfig().Build()
-	defer logger.Sync()
+	_, logger := common.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -48,7 +48,8 @@ func hostListCommand(_ *cobra.Command, _ []string) {
 
 	stream, err := cc.ListHosts(ctx, &api.Empty{})
 	if err != nil {
-		logger.Fatal("unable to receive ListHosts stream from server", zap.Error(err))
+		logger.ErrorContext(ctx, "unable to receive ListHosts stream from server", slogtool.ErrorAttr(err))
+		panic(err)
 	}
 
 	if strings.Contains(viper.GetString("host.list.format"), "\\t") {
@@ -61,22 +62,23 @@ func hostListCommand(_ *cobra.Command, _ []string) {
 
 	tmpl, err := template.New("").Funcs(basicFunctions()).Parse(viper.GetString("host.list.format"))
 	if err != nil {
-		logger.Fatal("unable to load template engine", zap.Error(err))
+		logger.ErrorContext(ctx, "unable to load template engine", slogtool.ErrorAttr(err))
+		panic(err)
 	}
 
-	hostList := scrapeHostList(logger, stream)
+	hostList := scrapeHostList(ctx, logger, stream)
 
-	printHostList(tmpl, false, hostList)
+	printHostList(ctx, logger, tmpl, false, hostList)
 }
 
-func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api.Member {
+func scrapeHostList(ctx context.Context, logger *slog.Logger, stream api.Admin_ListHostsClient) []*api.Member {
 	hostList := []*api.Member{}
 
 	for {
 		in, err := stream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) {
-				logger.Debug("closing stream", zap.Error(err))
+				logger.DebugContext(ctx, "closing stream", slogtool.ErrorAttr(err))
 
 				return hostList
 			}
@@ -84,7 +86,7 @@ func scrapeHostList(logger *zap.Logger, stream api.Admin_ListHostsClient) []*api
 			return hostList
 		}
 
-		fillInAPIMember(in)
+		fillInAPIMember(ctx, in)
 
 		hostList = append(hostList, in)
 	}

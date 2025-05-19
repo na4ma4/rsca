@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
+	"github.com/na4ma4/rsca/internal/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 var cmdTriggerAll = &cobra.Command{
@@ -46,9 +48,7 @@ var errTriggerFailed = errors.New("trigger failed")
 //nolint:forbidigo // Display Function
 func triggerAllCommand(_ *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-
-	logger, _ := zapConfig().Build()
-	defer logger.Sync()
+	_, logger := common.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -69,7 +69,8 @@ func triggerAllCommand(_ *cobra.Command, args []string) {
 	if cfg.GetBool("trigger.all.info") { //nolint:nestif // removing nesting harms readability.
 		r, reqErr := cc.TriggerInfo(ctx, ms)
 		if reqErr != nil {
-			logger.Fatal("unable to trigger all services", zap.Error(reqErr))
+			logger.ErrorContext(ctx, "unable to trigger all services", slogtool.ErrorAttr(reqErr))
+			panic(reqErr)
 		}
 
 		if err := triggerAllCommandInfo(r); err == nil {
@@ -78,7 +79,8 @@ func triggerAllCommand(_ *cobra.Command, args []string) {
 	} else {
 		r, reqErr := cc.TriggerAll(ctx, ms)
 		if reqErr != nil {
-			logger.Fatal("unable to trigger all services", zap.Error(reqErr))
+			logger.ErrorContext(ctx, "unable to trigger all services", slogtool.ErrorAttr(reqErr))
+			panic(reqErr)
 		}
 
 		if err := triggerAllCommandServices(r); err == nil {

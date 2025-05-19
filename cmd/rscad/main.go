@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-certprovider"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/mainconfig"
@@ -18,7 +20,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 )
@@ -46,16 +47,15 @@ func main() {
 
 func mainCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-
-	logger, _ := cfg.ZapConfig().Build()
-	defer logger.Sync()
+	_, logger := common.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	lis, listenErr := net.Listen("tcp", cfg.GetString("server.listen"))
 	if listenErr != nil {
-		logger.Fatal("failed to listen", zap.Error(listenErr))
+		logger.ErrorContext(ctx, "failed to listen", slogtool.ErrorAttr(listenErr))
+		panic(listenErr)
 	}
 
 	cp, cpErr := certprovider.NewFileProvider(
@@ -63,14 +63,16 @@ func mainCommand(_ *cobra.Command, _ []string) {
 		certprovider.ServerProvider(),
 	)
 	if cpErr != nil {
-		logger.Fatal("failed to get certificates", zap.Error(cpErr))
+		logger.ErrorContext(ctx, "failed to get certificates", slogtool.ErrorAttr(cpErr))
+		panic(cpErr)
 	}
 
-	logger.Info("server listening", zap.String("bind", viper.GetString("server.listen")))
+	logger.InfoContext(ctx, "server listening", slog.String("bind", viper.GetString("server.listen")))
 
 	st, stateErr := state.NewDiskState(logger, cfg.GetString("server.state-store"))
 	if stateErr != nil {
-		logger.Fatal("failed to create disk state storage", zap.Error(stateErr))
+		logger.ErrorContext(ctx, "failed to create disk state storage", slogtool.ErrorAttr(stateErr))
+		panic(stateErr)
 	}
 
 	defer st.Close()
@@ -105,7 +107,7 @@ func mainCommand(_ *cobra.Command, _ []string) {
 			}
 
 			if err := srv.ListenAndServe(); err != nil {
-				logger.Debug("metrics.Listen context done", zap.Error(ctx.Err()))
+				logger.Debug("metrics.Listen context done", slogtool.ErrorAttr(ctx.Err()))
 
 				cancel()
 			}

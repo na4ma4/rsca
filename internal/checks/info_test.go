@@ -1,7 +1,9 @@
 package checks_test
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -9,7 +11,6 @@ import (
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 func TestCheckTimeout(t *testing.T) {
@@ -126,7 +127,9 @@ func TestCheckRun(t *testing.T) {
 	defer cancel()
 
 	cfg := config.NewViperConfigFromViper(vcfg, "rsca-not-used")
-	logger := zap.NewNop()
+	var buf bytes.Buffer
+	h := slog.NewJSONHandler(&buf, nil)
+	logger := slog.New(h)
 	checkList := []*checks.Info{generateCheck("TEST", "testdata/check_ok.sh")}
 	respChan := make(chan *api.EventMessage)
 	runner := checks.RunChecks(ctx, cfg, logger, checkList, respChan)

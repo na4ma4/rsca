@@ -2,22 +2,22 @@ package state
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/asdine/storm/v3"
 	"github.com/na4ma4/rsca/api"
-	"go.uber.org/zap"
 )
 
 // Disk is a disk based storage that is compatible with the State interface.
 type Disk struct {
 	db     *storm.DB
-	logger *zap.Logger
+	Logger *slog.Logger
 	lock   sync.Mutex
 }
 
 // NewDiskState returns a Disk service that is compatible with the State interface.
-func NewDiskState(logger *zap.Logger, filename string) (State, error) {
+func NewDiskState(logger *slog.Logger, filename string) (State, error) {
 	db, err := storm.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database: %w", err)
@@ -25,7 +25,7 @@ func NewDiskState(logger *zap.Logger, filename string) (State, error) {
 
 	return &Disk{
 		db:     db,
-		logger: logger,
+		Logger: logger,
 		lock:   sync.Mutex{},
 	}, nil
 }

@@ -4,21 +4,22 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
 	"github.com/na4ma4/rsca/internal/common"
 	"github.com/na4ma4/rsca/internal/register"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // Client is a api.RSCAClient for co-ordinating requests from the server.
 type Client struct {
-	logger   *zap.Logger
+	Logger   *slog.Logger
 	hostname string
 	checks   checks.Checks
 	inbox    chan *api.Message
@@ -27,9 +28,9 @@ type Client struct {
 }
 
 // NewClient returns a setup api.RSCAClient.
-func NewClient(logger *zap.Logger, hostName string, checkList checks.Checks) *Client {
+func NewClient(logger *slog.Logger, hostName string, checkList checks.Checks) *Client {
 	return &Client{
-		logger:   logger,
+		Logger:   logger,
 		hostname: hostName,
 		checks:   checkList,
 		inbox:    make(chan *api.Message),
@@ -42,19 +43,19 @@ func (c *Client) streamMessages(ctx context.Context, cancel context.CancelFunc, 
 		in, err := stream.Recv()
 
 		if errors.Is(err, io.EOF) {
-			c.logger.Debug("EOF found, closing channel")
+			c.Logger.DebugContext(ctx, "EOF found, closing channel")
 			cancel()
 
 			return
 		} else if s, ok := status.FromError(err); err != nil && ok {
 			if s.Code() == codes.Unavailable {
-				c.logger.Warn("server has gone away", zap.Error(err))
+				c.Logger.WarnContext(ctx, "server has gone away", slogtool.ErrorAttr(err))
 				cancel()
 
 				return
 			}
 		} else if err != nil {
-			c.logger.Error("failed to receive a note", zap.Reflect("msg", in), zap.Error(err))
+			c.Logger.ErrorContext(ctx, "failed to receive a note", slog.Any("msg", in), slogtool.ErrorAttr(err))
 			cancel()
 
 			return
@@ -83,7 +84,7 @@ func (c *Client) Pipe(
 		for {
 			select {
 			case <-ctx.Done():
-				c.logger.Debug("context cancelled")
+				c.Logger.DebugContext(ctx, "context cancelled")
 				registrationTicker.Stop()
 				close(c.outbox)
 				close(c.inbox)
@@ -96,7 +97,7 @@ func (c *Client) Pipe(
 			case out, ok := <-c.outbox:
 				if ok {
 					if err := stream.Send(out); err != nil {
-						c.logger.Error("unable to send message", zap.Error(err))
+						c.Logger.ErrorContext(ctx, "unable to send message", slogtool.ErrorAttr(err))
 						cancel()
 					}
 				}
@@ -106,20 +107,20 @@ func (c *Client) Pipe(
 }
 
 // processUpdateAll processes a trigger all message.
-func (c *Client) processUpdateAll() {
-	c.logger.Debug("processUpdateAll() called")
+func (c *Client) processUpdateAll(ctx context.Context) {
+	c.Logger.DebugContext(ctx, "processUpdateAll() called")
 	c.checks.NextRun(time.Time{})
 }
 
 // processRepeatRegister processes a repeat-registration request message.
 func (c *Client) processRepeatRegister(ctx context.Context) {
-	c.logger.Debug("processRepeatRegister() called")
+	c.Logger.DebugContext(ctx, "processRepeatRegister() called")
 	c.SendRepeatRegistration(ctx)
 }
 
 // SendRepeatRegistration sends the registration message to the server.
 func (c *Client) SendRepeatRegistration(ctx context.Context) {
-	c.logger.Debug("sending repeat registration message")
+	c.Logger.DebugContext(ctx, "sending repeat registration message")
 	c.register.UpdateInfoStat(ctx)
 
 	c.outbox <- api.Message_builder{
@@ -158,7 +159,7 @@ func (c *Client) RunEvents(
 		for {
 			select {
 			case <-ctx.Done():
-				c.logger.Debug("context cancelled")
+				c.Logger.DebugContext(ctx, "context cancelled")
 
 				return nil
 			case in, ok := <-respChan:
@@ -171,18 +172,21 @@ func (c *Client) RunEvents(
 						switch v := in.WhichMessage(); v { //nolint:exhaustive // default catches unhandled.
 						case api.Message_PingMessage_case:
 							go func() {
-								c.outbox <- common.GeneratePingMessage(c.logger, c.hostname, in, in.GetPingMessage())
+								c.outbox <- common.GeneratePingMessage(ctx, c.Logger, c.hostname, in, in.GetPingMessage())
 							}()
 						case api.Message_TriggerAllMessage_case:
-							go c.processUpdateAll()
+							go c.processUpdateAll(ctx)
 						case api.Message_RepeatRegistrationMessage_case:
 							go c.processRepeatRegister(ctx)
 						default:
-							c.logger.Info("Received unhandled message", zap.String("message-type", v.String()))
+							c.Logger.InfoContext(ctx,
+								"Received unhandled message",
+								slog.String("message-type", v.String()),
+							)
 						}
-						c.logger.Debug("message processing finished")
+						c.Logger.DebugContext(ctx, "message processing finished")
 					} else {
-						c.logger.Debug("nil message received")
+						c.Logger.DebugContext(ctx, "nil message received")
 						cancel()
 					}
 				}

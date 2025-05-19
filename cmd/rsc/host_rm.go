@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/na4ma4/config"
+	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
+	"github.com/na4ma4/rsca/internal/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 var cmdHostRemove = &cobra.Command{
@@ -25,9 +27,7 @@ func init() {
 //nolint:forbidigo // Display Function
 func hostRemoveCommand(_ *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-
-	logger, _ := zapConfig().Build()
-	defer logger.Sync()
+	_, logger := common.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -40,7 +40,8 @@ func hostRemoveCommand(_ *cobra.Command, args []string) {
 		Names: args,
 	}.Build())
 	if err != nil {
-		logger.Fatal("unable to send RemoveHost command to server", zap.Error(err))
+		logger.ErrorContext(ctx, "unable to send RemoveHost command to server", slogtool.ErrorAttr(err))
+		panic(err)
 	}
 
 	fmt.Printf("Hosts Removed: %q\n", resp.GetNames())
