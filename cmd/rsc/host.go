@@ -12,6 +12,7 @@ import (
 
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
+	"github.com/na4ma4/rsca/internal/model"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +55,7 @@ func printHostList(
 	logger *slog.Logger,
 	tmpl *template.Template,
 	forceHeaderAbsent bool,
-	hostList []*api.Member,
+	hostList []*model.Member,
 ) {
 	sort.Slice(hostList, func(i, j int) bool { return hostList[i].GetName() < hostList[j].GetName() })
 

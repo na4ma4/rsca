@@ -12,6 +12,7 @@ import (
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/model"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,7 +38,11 @@ func init() {
 
 func hostListCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-	_, logger := common.LogManager(slog.LevelInfo)
+	logLevel := slog.LevelInfo
+	if cfg.GetBool("debug") {
+		logLevel = slog.LevelDebug
+	}
+	_, logger := common.LogManager(logLevel)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -71,8 +76,8 @@ func hostListCommand(_ *cobra.Command, _ []string) {
 	printHostList(ctx, logger, tmpl, false, hostList)
 }
 
-func scrapeHostList(ctx context.Context, logger *slog.Logger, stream api.Admin_ListHostsClient) []*api.Member {
-	hostList := []*api.Member{}
+func scrapeHostList(ctx context.Context, logger *slog.Logger, stream api.Admin_ListHostsClient) []*model.Member {
+	hostList := []*model.Member{}
 
 	for {
 		in, err := stream.Recv()
@@ -88,6 +93,6 @@ func scrapeHostList(ctx context.Context, logger *slog.Logger, stream api.Admin_L
 
 		fillInAPIMember(ctx, in)
 
-		hostList = append(hostList, in)
+		hostList = append(hostList, model.MemberFromAPI(in))
 	}
 }

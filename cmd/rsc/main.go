@@ -45,10 +45,14 @@ func grpcServer(server string) string {
 }
 
 func dialGRPC(ctx context.Context, cfg config.Conf, logger *slog.Logger) *grpc.ClientConn {
+	serverAddr := cfg.GetString("admin.server-addr")
+	if serverAddr == "" {
+		serverAddr = cfg.GetString("admin.server")
+	}
 	serverHostName, _, _ := net.SplitHostPort(grpcServer(cfg.GetString("admin.server")))
 
 	logger.DebugContext(ctx, "connecting to API",
-		slog.String("bind", grpcServer(cfg.GetString("admin.server"))),
+		slog.String("bind", grpcServer(serverAddr)),
 		slog.String("dns-name", serverHostName),
 	)
 
@@ -61,7 +65,7 @@ func dialGRPC(ctx context.Context, cfg config.Conf, logger *slog.Logger) *grpc.C
 		panic(err)
 	}
 
-	gc, err := grpc.NewClient(grpcServer(cfg.GetString("admin.server")), cp.DialOption(serverHostName))
+	gc, err := grpc.NewClient(grpcServer(serverAddr), cp.DialOption(serverHostName))
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to connect to server", slogtool.ErrorAttr(err))
 		panic(err)

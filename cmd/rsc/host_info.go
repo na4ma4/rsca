@@ -12,6 +12,7 @@ import (
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/model"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -80,8 +81,8 @@ func findHostInList(
 	logger *slog.Logger,
 	query []string,
 	stream api.Admin_ListHostsClient,
-) []*api.Member {
-	hostList := []*api.Member{}
+) []*model.Member {
+	hostList := []*model.Member{}
 
 	for {
 		in, err := stream.Recv()
@@ -99,7 +100,7 @@ func findHostInList(
 
 		for _, match := range query {
 			if in.IsMatch(match) {
-				hostList = append(hostList, in)
+				hostList = append(hostList, model.MemberFromAPI(in))
 			}
 		}
 	}
