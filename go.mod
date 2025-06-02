@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/na4ma4/config v1.0.3
-	github.com/na4ma4/go-certprovider v0.3.5
+	github.com/na4ma4/go-certprovider v0.3.6
 	github.com/na4ma4/go-permbits v0.5.2
 	github.com/na4ma4/go-slogtool v0.1.2
 	github.com/na4ma4/go-timestring v0.3.0
@@ -21,7 +21,6 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	go.uber.org/multierr v1.11.0
-	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.14.0
 	golang.org/x/text v0.25.0
 	google.golang.org/grpc v1.72.1
@@ -54,8 +53,9 @@ require (
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250519155744-55703ea1f237 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
