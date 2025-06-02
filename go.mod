@@ -12,7 +12,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/na4ma4/config v1.0.3
 	github.com/na4ma4/go-certprovider v0.3.6
-	github.com/na4ma4/go-permbits v0.5.2
+	github.com/na4ma4/go-permbits v0.5.3
 	github.com/na4ma4/go-slogtool v0.1.2
 	github.com/na4ma4/go-timestring v0.3.0
 	github.com/okzk/sdnotify v0.0.0-20240725214427-1c1fdd37c5ac
