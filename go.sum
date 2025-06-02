@@ -55,8 +55,8 @@ github.com/lufia/plan9stats v0.0.0-20250317134145-8bc96cf8fc35 h1:PpXWgLPs+Fqr32
 github.com/lufia/plan9stats v0.0.0-20250317134145-8bc96cf8fc35/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
-github.com/na4ma4/config v1.0.3 h1:urL8tDVK2nOffQ4CeemRmSCUdzr+WgQ2Q1RhVGX6BYU=
-github.com/na4ma4/config v1.0.3/go.mod h1:tuIufOEBLzp7n4Swb8CWXOSL9LjcRvAum4NMmnJ5IXE=
+github.com/na4ma4/config v1.0.4 h1:Gf+jvlmdWwVZCdz6nefzcHc/z+WUEpKKLC6zZoWcog8=
+github.com/na4ma4/config v1.0.4/go.mod h1:plYTnhwgd268sQ+jHNr/A9AmgIUeu7nu/LhJkOgEY1U=
 github.com/na4ma4/go-certprovider v0.3.6 h1:5Nves3x0GD+thZ2sxelSyi7FJtKXEOzjomRTZcJiujY=
 github.com/na4ma4/go-certprovider v0.3.6/go.mod h1:kksn4kTlr6T5NgEHODS2NdArlCWViYsnzCtDUbNm6GI=
 github.com/na4ma4/go-permbits v0.5.3 h1:G0FnRBzqMbVVC8HvFVpvoE/ApoxFvuF/G+/NUo2m4AA=

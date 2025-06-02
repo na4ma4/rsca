@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/na4ma4/config v1.0.3
+	github.com/na4ma4/config v1.0.4
 	github.com/na4ma4/go-certprovider v0.3.6
 	github.com/na4ma4/go-permbits v0.5.3
 	github.com/na4ma4/go-slogtool v0.1.2
