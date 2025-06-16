@@ -1,8 +1,6 @@
 module github.com/na4ma4/rsca
 
-go 1.23.4
-
-toolchain go1.24.1
+go 1.24.1
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
@@ -14,7 +12,7 @@ require (
 	github.com/na4ma4/go-certprovider v0.3.6
 	github.com/na4ma4/go-permbits v0.5.3
 	github.com/na4ma4/go-slogtool v0.1.3
-	github.com/na4ma4/go-timestring v0.3.0
+	github.com/na4ma4/go-timestring v0.4.0
 	github.com/okzk/sdnotify v0.0.0-20240725214427-1c1fdd37c5ac
 	github.com/prometheus/client_golang v1.22.0
 	github.com/shirou/gopsutil/v3 v3.24.5
