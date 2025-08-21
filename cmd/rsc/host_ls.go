@@ -11,7 +11,7 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/na4ma4/rsca/internal/model"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -42,7 +42,7 @@ func hostListCommand(_ *cobra.Command, _ []string) {
 	if cfg.GetBool("debug") {
 		logLevel = slog.LevelDebug
 	}
-	_, logger := common.LogManager(logLevel)
+	_, logger := helpers.LogManager(logLevel)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

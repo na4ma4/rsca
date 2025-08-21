@@ -17,7 +17,7 @@ import (
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/client"
 	"github.com/na4ma4/rsca/internal/checks"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/na4ma4/rsca/internal/mainconfig"
 	"github.com/na4ma4/rsca/internal/register"
 	"github.com/spf13/cobra"
@@ -53,7 +53,7 @@ func main() {
 
 func mainCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfDFromViper(viper.GetViper(), "/etc/nagios/rsca.d/", "rsca")
-	_, logger := common.LogManager(slog.LevelInfo)
+	_, logger := helpers.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -96,8 +96,8 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	eg.Go(cl.Pipe(ctx, cancel, cfg, stream))
 	eg.Go(checks.RunChecks(ctx, cfg, logger, checkList, respChan))
-	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
-	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
+	eg.Go(helpers.WaitForOSSignal(ctx, cancel, cfg, logger, c))
+	eg.Go(helpers.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(cl.RunEvents(ctx, cancel, regmsg, respChan))
 
 	if err := stream.Send(streamMsg); err != nil {

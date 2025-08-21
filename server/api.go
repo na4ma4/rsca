@@ -14,7 +14,7 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/na4ma4/rsca/internal/state"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -344,7 +344,7 @@ func (s *Server) processPipe(
 					s.metric.Received.WithLabelValues("_all", "PingMessage").Inc()
 					s.metric.Received.WithLabelValues(m.M.GetEnvelope().GetSender().GetName(), "PingMessage").Inc()
 
-					if err := common.ProcessPingMessage(ctx, s.Logger, stream, s.hostname, m.M, m.M.GetPingMessage()); err != nil {
+					if err := helpers.ProcessPingMessage(ctx, s.Logger, stream, s.hostname, m.M, m.M.GetPingMessage()); err != nil {
 						s.Logger.ErrorContext(ctx,
 							"unable to send PongMessage in response to PingMessage",
 							slogtool.ErrorAttr(err),

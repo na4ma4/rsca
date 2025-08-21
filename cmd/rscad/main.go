@@ -13,7 +13,7 @@ import (
 	"github.com/na4ma4/go-certprovider"
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/na4ma4/rsca/internal/mainconfig"
 	"github.com/na4ma4/rsca/internal/state"
 	"github.com/na4ma4/rsca/server"
@@ -47,12 +47,13 @@ func main() {
 
 func mainCommand(_ *cobra.Command, _ []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-	_, logger := common.LogManager(slog.LevelInfo)
+	_, logger := helpers.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lis, listenErr := net.Listen("tcp", cfg.GetString("server.listen"))
+	lc := &net.ListenConfig{}
+	lis, listenErr := lc.Listen(ctx, "tcp", cfg.GetString("server.listen"))
 	if listenErr != nil {
 		logger.ErrorContext(ctx, "failed to listen", slogtool.ErrorAttr(listenErr))
 		panic(listenErr)
@@ -88,10 +89,10 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	eg.Go(common.WaitForOSSignal(ctx, cancel, cfg, logger, c))
+	eg.Go(helpers.WaitForOSSignal(ctx, cancel, cfg, logger, c))
 	eg.Go(sapi.Run(ctx, cfg))
-	eg.Go(common.StateReaper(ctx, cfg, logger, st))
-	eg.Go(common.ProcessWatchdog(ctx, cancel, cfg, logger))
+	eg.Go(helpers.StateReaper(ctx, cfg, logger, st))
+	eg.Go(helpers.ProcessWatchdog(ctx, cancel, cfg, logger))
 	eg.Go(func() error { return gc.Serve(lis) })
 
 	if cfg.GetBool("metrics.enabled") {

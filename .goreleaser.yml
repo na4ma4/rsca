@@ -178,19 +178,25 @@ nfpms:
           preremove: "nfpms/server/pre-remove.sh"
           postremove: "nfpms/server/post-remove.sh"
 
-brews:
+homebrew_casks:
   -
     name: rsc
     repository:
       owner: na4ma4
       name: homebrew-tap
+    ids:
+      - rsc
+    binary: rsc
     commit_author:
       name: goreleaserbot
       email: na4ma4@users.noreply.github.com
     directory: Formula
     homepage: https://github.com/na4ma4/rsca
     description: Remote service check agent (client)
-    test: |
-      system "#{bin}/rsc --version"
-    install: |
-      bin.install "rsc"
+    hooks:
+      post:
+        # replace foo with the actual binary name
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/foo"]
+          end
