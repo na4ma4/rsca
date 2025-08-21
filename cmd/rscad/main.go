@@ -52,7 +52,6 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	lc := &net.ListenConfig{}
 	listenConfig := &net.ListenConfig{}
 	lis, listenErr := listenConfig.Listen(ctx, "tcp", cfg.GetString("server.listen"))
 	if listenErr != nil {
