@@ -11,7 +11,7 @@ import (
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
 	"github.com/na4ma4/rsca/internal/checks"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/na4ma4/rsca/internal/register"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -172,7 +172,7 @@ func (c *Client) RunEvents(
 						switch v := in.WhichMessage(); v { //nolint:exhaustive // default catches unhandled.
 						case api.Message_PingMessage_case:
 							go func() {
-								c.outbox <- common.GeneratePingMessage(ctx, c.Logger, c.hostname, in, in.GetPingMessage())
+								c.outbox <- helpers.GeneratePingMessage(ctx, c.Logger, c.hostname, in, in.GetPingMessage())
 							}()
 						case api.Message_TriggerAllMessage_case:
 							go c.processUpdateAll(ctx)

@@ -8,7 +8,7 @@ import (
 	"github.com/na4ma4/config"
 	"github.com/na4ma4/go-slogtool"
 	"github.com/na4ma4/rsca/api"
-	"github.com/na4ma4/rsca/internal/common"
+	"github.com/na4ma4/rsca/internal/helpers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,7 +27,7 @@ func init() {
 //nolint:forbidigo // Display Function
 func hostRemoveCommand(_ *cobra.Command, args []string) {
 	cfg := config.NewViperConfigFromViper(viper.GetViper(), "rsca")
-	_, logger := common.LogManager(slog.LevelInfo)
+	_, logger := helpers.LogManager(slog.LevelInfo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
