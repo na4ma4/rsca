@@ -53,7 +53,8 @@ func mainCommand(_ *cobra.Command, _ []string) {
 	defer cancel()
 
 	lc := &net.ListenConfig{}
-	lis, listenErr := lc.Listen(ctx, "tcp", cfg.GetString("server.listen"))
+	listenConfig := &net.ListenConfig{}
+	lis, listenErr := listenConfig.Listen(ctx, "tcp", cfg.GetString("server.listen"))
 	if listenErr != nil {
 		logger.ErrorContext(ctx, "failed to listen", slogtool.ErrorAttr(listenErr))
 		panic(listenErr)
