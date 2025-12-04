@@ -186,7 +186,8 @@ homebrew_casks:
       name: homebrew-tap
     ids:
       - rsc
-    binary: rsc
+    binaries:
+      - rsc
     commit_author:
       name: goreleaserbot
       email: na4ma4@users.noreply.github.com
