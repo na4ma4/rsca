@@ -1,3 +1,4 @@
+//nolint:nolintlint,revive // This is the RSCA API.
 package api
 
 // // MembersByName returns a member from a supplied name.
